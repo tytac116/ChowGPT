@@ -1,0 +1,34 @@
+{
+    "includeWebResults": false,
+    "language": "en",
+    "maxImages": 0,
+    "maximumLeadsEnrichmentRecords": 0,
+    "scrapeContacts": false,
+    "scrapeDirectories": false,
+    "scrapeImageAuthors": false,
+    "scrapePlaceDetailPage": false,
+    "scrapeReviewsPersonalData": true,
+    "scrapeTableReservationProvider": false,
+    "searchStringsArray": [
+        "restaurant"
+    ],
+    "skipClosedPlaces": false,
+    "startUrls": [
+        {
+            "url": "https://www.google.com/maps/search/?api=1&query=PIER%20Restaurant&query_place_id=ChIJtYNwJi8NlR4RyvM6ba_WU_U",
+            "method": "GET"
+        },
+        {
+            "url": "https://www.google.com/maps/search/?api=1&query=Fyn%20Restaurant&query_place_id=ChIJJXjP9dFnzB0RKRtezQrweYM",
+            "method": "GET"
+        },
+        {
+            "url": "https://www.google.com/maps/search/?api=1&query=Zest%20Restaurant&query_place_id=ChIJr1neg4hnzB0R5vZxQ1FL1bU",
+            "method": "GET"
+        },
+        {
+            "url": "https://www.google.com/maps/search/?api=1&query=Osteria%20Tarantino&query_place_id=ChIJG2eUjGdnzB0Rw2nWL5g7NDE",
+            "method": "GET"
+        }
+    ]
+}

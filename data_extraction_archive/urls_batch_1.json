@@ -1,0 +1,602 @@
+[
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bo-Vine%20Wine%20%26%20Grill%20House&query_place_id=ChIJJ0e5HexnzB0RSHGrwMMH40k",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Belly%20of%20the%20beast&query_place_id=ChIJVWO4oURnzB0RNaPCKWYBfZE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Persian%20Peacock&query_place_id=ChIJx4BbAX9nzB0R4dXIQH2ljXc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=CLUB%20KLOOF&query_place_id=ChIJLZkRctpnzB0RVUt8heDMQ4E",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Arnolds%20Restaurant&query_place_id=ChIJE1rjK3JnzB0RLRr5lPW8Ixg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Our%20Local%20Kloof%20Street&query_place_id=ChIJS163JlBnzB0R5Bb6f6fSCFQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Caf%C3%A9%20Caprice&query_place_id=ChIJlZofFVNmzB0R3GxaFYr0p7Q",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Woodlands%20Eatery&query_place_id=ChIJz3Sp9oNnzB0ROYNdyl2qUC8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Black%20Sheep%20Restaurant&query_place_id=ChIJFceKh3NnzB0RdrgYei8L3Gg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Upper%20Union&query_place_id=ChIJZx2KoLVnzB0R2oRst7jI_g4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Dog's%20Bollocks%20at%20YARD&query_place_id=ChIJZdIh1ntnzB0RAjkMOWET5X8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=EatStanbul&query_place_id=ChIJUxexXpNnzB0R_psHE79CrgU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mantra%20Cafe%2C%20Cape%20Town&query_place_id=ChIJOcM8FVNmzB0RU-FcL_H9TZk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Tiger's%20Milk%20Camps%20Bay&query_place_id=ChIJkxQTNLBnzB0RcZgAUpfqUQ4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bilboa%20by%20Kove%20Collection&query_place_id=ChIJs7Ea91JmzB0RbOa4Dsbad3o",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Miller's%20Thumb&query_place_id=ChIJa0LNP3JnzB0R9sPPntwKcXs",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Rick's%20Cafe%20Americain&query_place_id=ChIJq-0cGvdnzB0RNsSdBEaiAac",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Paranga%20by%20Kove%20Collection&query_place_id=ChIJD1_JalNmzB0RGa8_y4ur1-o",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Judd%E2%80%99s%20Local&query_place_id=ChIJpf9QB1JnzB0Rg0fNm9Aelcc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Aubergine%20Restaurant&query_place_id=ChIJxx7CBXpnzB0RXHXjYve4xU8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=%C3%ABlgr%20Restaurant&query_place_id=ChIJI92PU1VnzB0RppfVHzEAKME",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Van%20Hunks&query_place_id=ChIJpQJAxnNnzB0Rlp0bXyF2-ks",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Toni's%20on%20Kloof&query_place_id=ChIJh07HkXNnzB0RcI6CJuyuwJg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Zenzero%20by%20Kove%20Collection&query_place_id=ChIJKZzhX1JmzB0Rwg_CGMdKv7A",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Carlyle%E2%80%99s&query_place_id=ChIJw8gPcYBnzB0R3O4w3K57lfE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Fyn%20Restaurant&query_place_id=ChIJJXjP9dFnzB0RKRtezQrweYM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=PIER%20Restaurant&query_place_id=ChIJtYNwJi8NlR4RyvM6ba_WU_U",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Utopia%20Cape%20Town&query_place_id=ChIJn5Y5l2dnzB0Rh5Bm-QZC0fo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bouchon%20Bistro&query_place_id=ChIJHf2TYGZnzB0RIfeC17qjQ8Q",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Pigalle%20Restaurant&query_place_id=ChIJQzy7VENnzB0RYZWUTTOByco",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mozambik%20V%20%26%20A%20Waterfront&query_place_id=ChIJ0QbHD35nzB0R8Wh8DQlQipc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Ba%C3%ADa%20Seafood%20Restaurant%20-%20V%26A%20Waterfront&query_place_id=ChIJA-OvMFdnzB0RPaXqFs6Y1Q8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=SUSA%20restaurant&query_place_id=ChIJh3RvofFnzB0RPNWr7jy-wxs",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Osteria%20Tarantino&query_place_id=ChIJG2eUjGdnzB0Rw2nWL5g7NDE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mano's&query_place_id=ChIJH-ubEEZnzB0RprrOaAetD98",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Harbour%20Bridge%20Restaurant&query_place_id=ChIJ9XnZAKlnzB0RF5I4mQ1yMFI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=COOKED%20The%20Watershed%20-%20currently%20under%20renovation&query_place_id=ChIJF6qx9VpnzB0RY_7X9mOfmlQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Tomson%20Restaurant%20Cape%20Town&query_place_id=ChIJl-YQmVNnzB0RxrnxUjP0Ig0",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Sevruga%20Restaurant&query_place_id=ChIJh_UCllBnzB0RzCPjz_XHKzU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Peach%20Tree%20Restaurant&query_place_id=ChIJ0WSvfmBnzB0RTE20CEmKVCM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Dias%20Tavern%20Portuguese%20Restaurant&query_place_id=ChIJPfVrGX1nzB0RzET5eJ-gdiE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Iron%20Steak%20and%20Bar%20Restaurant&query_place_id=ChIJjYcvwNVnzB0RXEx_EjBbK-E",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=GINJA%20Restaurant%20Cape%20Town&query_place_id=ChIJbR5Za1pnzB0RmVlaGkc6Li8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Terrarium%20Restaurant&query_place_id=ChIJ15NSElpnzB0R5NhxZBEhKYo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bukhara%20Cape%20Town%20CBD&query_place_id=ChIJ093ET2RnzB0RrI3OolwRLl8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Willoughby%20Restaurant%20Waterfront&query_place_id=ChIJkRxluiVnzB0RZm8tTM9m6tk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=ZEETAN%20TURKISH%20RESTAURANT&query_place_id=ChIJ5ZFZ7-NnzB0RclQDYD2OkGo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Vivaldi%20Restaurant&query_place_id=ChIJ4Rg3EHRnzB0Rm6izIII1_j4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Quarter%20Kitchen%20Restaurant&query_place_id=ChIJIe_PBEVnzB0R0d1goZDdHyM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Tobago's%20Restaurant%2C%20Bar%20and%20Terrace&query_place_id=ChIJc74DME5nzB0RYm_mp-QJLfE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Villa%20Portuguese%20Restaurant.&query_place_id=ChIJDwtrYnhnzB0R-owWHRbvqEg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Narona&query_place_id=ChIJZYaUFHlnzB0Ret2B8pUrnAk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Dizzys%20Restaurant%20%26%20Pub&query_place_id=ChIJGy2NICxnzB0RZkFBbtFhQdo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Codfather%20Seafood%20%26%20Sushi&query_place_id=ChIJUVWciFJmzB0Rhech9dAcUjw",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bacini's%20Pizzeria%20%26%20Deli&query_place_id=ChIJXXlt3HRnzB0RQRGQw45gqV8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Vadivelu&query_place_id=ChIJpUfgnUBnzB0RRai1NitItg4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Planet%20Bar&query_place_id=ChIJITzQ5HBnzB0RrNJjPndyZOY",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=INFUSION%20RESTAURANT%20AND%20BAR&query_place_id=ChIJC7LjKwBnzB0RGGaG4yEVXCo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Lawns%20at%20the%20Roundhouse&query_place_id=ChIJl45bYqpnzB0RlzXvUN2moF8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=la%20Belle%20Camps%20Bay%20by%20Kove%20Collection&query_place_id=ChIJLfJl91JmzB0RG4eD5nYAzIM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Asoka%20Restaurant%2C%20Bar%20and%20Lounge&query_place_id=ChIJl5Jcv3NnzB0RuG1OswkRez0",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Salsify%20at%20the%20Roundhouse&query_place_id=ChIJL5QxrbpnzB0REZTW-bJD0qA",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Harry's%20Beach%20Restaurant&query_place_id=ChIJSWmNCQBnzB0RKPm4qCDWKmk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bella%20Italia%20Vredehoek&query_place_id=ChIJWTZvYtBdzB0R2qRrLbIjHdY",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mucky%20Mary%20and%20the%20Bitch's%20Tits%20at%20YARD&query_place_id=ChIJ0ZfGfXlnzB0R2IBo2SDpSQk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Aruba%20Restaurant%20and%20Bar&query_place_id=ChIJWf_FqlpnzB0R4U7fQJNjhMs",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mozambik%20Camps%20Bay&query_place_id=ChIJFZiAh3ZnzB0RcWU69pwgrGk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Karibu%20Restaurant&query_place_id=ChIJyXPWc6JnzB0RPDm2xYAodys",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Gigi%20Rooftop%20Restaurant%20%26%20Bar&query_place_id=ChIJpVDOWVlnzB0RYnHAJitnkyw",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Saray%20Restaurant&query_place_id=ChIJrVReBohnzB0RIVl6YyFevac",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Pakwathu%20Braai%20Restaurant&query_place_id=ChIJOcM5YmVdzB0R0b_LShMhfvo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Caramba%20Authentic%20Portuguese%20Restaurant&query_place_id=ChIJb3AWt5VnzB0Rxbx0tcBJKqA",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Bayfront%20Blu%20Seafood%20Restaurant&query_place_id=ChIJAQAAwFlnzB0R9b8AFFE7WjI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Step%20Brothers%20Restaurant%20and%20Bar&query_place_id=ChIJuwN2d2dnzB0Redq2mCiDrEY",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=COPA%20Restaurant&query_place_id=ChIJFaIBn-pnzB0RceFLraYa7r0",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=TANG%20Asian%20Luxury%20Restaurant%20%26%20Bar%20Waterfront&query_place_id=ChIJpW47wQ1nzB0R2T38nc6UVbs",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Quay%20Four%20Restaurant&query_place_id=ChIJh_UCllBnzB0RzoD22ZgGjUc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Tomo%20Restaurant&query_place_id=ChIJTY08t7ZnzB0RFuVeMCQMg9k",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Liguria%20Ristorante&query_place_id=ChIJBbbIUJZnzB0RHd0d9sIOFT4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Nobantu's%20Restaurant&query_place_id=ChIJ6WuW9P1nzB0RavaH2wE_ZQo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Base%20of%20African%20Restaurant&query_place_id=ChIJhZEMwWVnzB0RUbL75xiubiQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Tarim%20Yemen%20Restaurant&query_place_id=ChIJi8fMGgFnzB0RgVf1yiIiCaw",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Saigon&query_place_id=ChIJaWTsPHRnzB0R6SQprW1It-E",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Yindee's%20best%20traditional%20Thai%20food%20in%20Kloof%20street%20dining%20district&query_place_id=ChIJf6kY63NnzB0RmW8Uu0EAfYc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Pizza%20Warehouse%20at%20YARD&query_place_id=ChIJBTpw42hnzB0R_QA3gSngKHk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=PRIMI%20Camps%20Bay&query_place_id=ChIJN8RxSWJnzB0RHq-ZIT48T2E",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Wolf%20House&query_place_id=ChIJ3U8_LuVnzB0RAQO_HGZ3bno",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Vintage%20India&query_place_id=ChIJBwwwkE3ytAERbCDFuRnioOA",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Col'Cacchio%20Camps%20Bay&query_place_id=ChIJu1GIFlNmzB0RE6mZXdyN9Bo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Kyoto%20Garden%20Japanese%20Restaurant&query_place_id=ChIJMe6qQHJnzB0RQU-0lRTdfwE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Deer%20Park%20Caf%C3%A9&query_place_id=ChIJhUc_94NnzB0RAUxQ1jbqit0",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Chinchilla%20by%20Kove%20Collection&query_place_id=ChIJ9yvW9VJmzB0Rapxiq556WjU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Red%20Room&query_place_id=ChIJK1fsp15nzB0RwLyuAU4vctk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Lazari&query_place_id=ChIJ9XAeMoBnzB0Rs5EpMEo1kzU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Ou%20Meul%20Oranjezicht&query_place_id=ChIJu3elGJJnzB0RiW06rz_daJk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Tides%20Restaurant&query_place_id=ChIJQzk05FJmzB0R1J1wjVJ821Q",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=ACHLA%20Falafel%20and%20Shawarma&query_place_id=ChIJz9EKZ4FDzB0R4mZKSf3V-TI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Active%20Sushi&query_place_id=ChIJK9JLkWdnzB0RnJzuWE0IM20",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Cafe%20Riteve&query_place_id=ChIJt9AbdHpnzB0RmRVJZkf8DG8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Taishan%20kitchen%20(Kloof%20Street)&query_place_id=ChIJM-vkAtpnzB0RnxCELmDVkh4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Chef's%20Table%20at%20Mount%20Nelson&query_place_id=ChIJ92w8salnzB0Rslqw2qcF2HU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Infinity%20Restaurant&query_place_id=ChIJqRhkiJFnzB0RvR5Cq892BVg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=YU%20Restaurant&query_place_id=ChIJfxpHl9hnzB0R_xj27MZTNFI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Haiku%20Cape%20Town%20CBD&query_place_id=ChIJL7fPUmRnzB0RNMT58CSTu7s",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Yizani%20Restaurant&query_place_id=ChIJnSpRmWBnzB0RF6eKqTx0wmo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mint%20Restaurant%20%26%20Terrace&query_place_id=ChIJoTtv7mRnzB0RAY-OhYlf9m8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Three%20Feathers%20Diner%20%26%20Restaurant&query_place_id=ChIJrYFQW6FdzB0RdWzwEP_kOao",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Company's%20Garden%20Restaurant&query_place_id=ChIJIxTTSGVnzB0RJpaYKQENSAQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Little%20Ethiopia%20Restaurant&query_place_id=ChIJt2pXKGRnzB0R06LkULq_DYU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=6%20Spin%20Street%20Restaurant%20Gallery&query_place_id=ChIJrxanpmRnzB0RVDKfBqqPvsI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Greek%20Club%20Restaurant&query_place_id=ChIJiQZNm9BnzB0RXXfhRsnv9L8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Filini%20Restaurant&query_place_id=ChIJtVmXu2FnzB0RESiYbGHhuXc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mesopotamia%20Kurdish%20Restaurant&query_place_id=ChIJf52CSmRnzB0RjqqjOnHRh3I",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Ala%20Turkish%20Restaurant&query_place_id=ChIJa9hdRkRnzB0RD-BzYIcQ9-k",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Riempies%20Restaurant&query_place_id=ChIJrRLB_mNnzB0RBh03m821Hgc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Biesmiellah%20Restaurant&query_place_id=ChIJHzEevGhnzB0RXrMsWSryv-M",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Obi%20Restaurant&query_place_id=ChIJl4_bNWFnzB0RzqmdTriPtvY",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Korean%20Soju%20Restaurant&query_place_id=ChIJV0tLV0jytAERIy8j7bVDC1g",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Sultan%20Sheesha&query_place_id=ChIJcS-WkEZnzB0RKx_iB5rXmLU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Afternoon%20Tea%20at%20Mount%20Nelson%2C%20A%20Belmond%20Hotel%2C%20Cape%20Town&query_place_id=ChIJC60FHHFnzB0Ri_0XNP-SarQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Thai%20Sushi%20Corner&query_place_id=ChIJpXbKSERnzB0RxVoV54WkU2w",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Plant%20-%20Camps%20bay&query_place_id=ChIJrX5HnORnzB0R2GRNJNiLYZI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mai%20Thai%20Sushi%20Gardens&query_place_id=ChIJXzNTXndnzB0RZ7vXAwRLBUE",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Sweetbeet%20Gardens%20Centre%20(Halaal)&query_place_id=ChIJjURMOvdnzB0Rnx6QPkLMbkM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Coffee%20Time&query_place_id=ChIJrdWTKHhnzB0Rz2VhSTxNlZY",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Nourish'd%20Caf%C3%A9%20%26%20Juicery&query_place_id=ChIJtbW13XRnzB0Rd9QGyiFReyM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Oasis%20Restaurant&query_place_id=ChIJL1zvpPNnzB0RENE5MsfP1dc",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Loco%20Vibra&query_place_id=ChIJ_QtT9wBnzB0Rhgd7mt7qthM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Ubon%20Thai&query_place_id=ChIJVVaeCk5nzB0R8Xi9hk2Wui4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Auberge%2C%20Gardens&query_place_id=ChIJ7wAFWXNnzB0Rz7ZbERsfHC8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Steers&query_place_id=ChIJAbpNrXBnzB0RqO_kT9kb7Ag",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=KAUAI%20Camps%20Bay&query_place_id=ChIJgd8WFlNmzB0RVJd1AdbD7Ek",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Diva%20Pizza&query_place_id=ChIJ2eMOkntnzB0RvFl-hsReEMg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Burgerboss&query_place_id=ChIJvQUxLK9nzB0RPx4nHR82Rz8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=N%C3%BC%20Health%20Food%20Wembley&query_place_id=ChIJgWU56RNnzB0Rw6u8ELmdOnU",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=And%20Lemon%20Restaurant&query_place_id=ChIJlfdHXqxnzB0RwI3-fou5SPQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Rouge%20French%20Loungeroom%20and%20Restaurant&query_place_id=ChIJVVVVVUhnzB0ROc12FiWt9dQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Cape%20Town%20Hotel%20School%20Restaurant&query_place_id=ChIJ9zYE1jdnzB0Rl6EMeQ6Z9Qg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Marble%20Restaurant&query_place_id=ChIJUXDXPQBnzB0RKpDQRcjkzo4",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Simply%20Asia%20Heritage%20Square&query_place_id=ChIJU5kKZWZnzB0RJAVcAK3TZ7g",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=SIBA%20-%20The%20Restaurant&query_place_id=ChIJ9Zzf5M9nzB0R1GvDiLk8Wdk",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=The%20Diplomatic%20Bar%20and%20Restaurant&query_place_id=ChIJAzTCFa1nzB0R5LTaFaDh8I8",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Manga%20Restaurant&query_place_id=ChIJ__8zyzVnzB0R7rmYHJEPNKw",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Mythos%20Greek%20Restaurants&query_place_id=ChIJzeGQZCRnzB0RjN2aYJ0rCtM",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Ninety%20One%20-%20Indian%20Restaurant&query_place_id=ChIJs9F-MTtnzB0RChH3Bsvn7iI",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Addis%20in%20Cape%20Ethiopian%20Restaurant&query_place_id=ChIJFdamFsHKzR0RO2qULdgtLzQ",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Fatima's%20African%20restuarant&query_place_id=ChIJEZDHNGRnzB0RsDRdG9ZxFqg",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Stonebreakers%20Restaurant&query_place_id=ChIJd0onelBnzB0RyW_PbBiyRUo",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=HON%20Asian%20Restaurant&query_place_id=ChIJDTSsAjJdzB0RNMnOzcwlvVA",
+        "method": "GET"
+    },
+    {
+        "url": "https://www.google.com/maps/search/?api=1&query=Veranda%20Restaurant%2FM%20Cafe%20(Cape%20Town)&query_place_id=ChIJuycyoWZnzB0RbVde-jdSxu0",
+        "method": "GET"
+    }
+]
