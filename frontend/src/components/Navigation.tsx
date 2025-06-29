@@ -4,7 +4,13 @@ import { Button } from './ui/Button'
 import { UserProfile } from './UserProfile'
 import { useTheme } from '../contexts/ThemeContext'
 import { mockUser } from '../types/user'
-import { cn } from '../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct cn implementation to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
 
 interface NavigationProps {
   isOpen: boolean
