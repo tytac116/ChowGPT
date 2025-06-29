@@ -7,7 +7,7 @@ import { errorHandler, notFoundHandler } from './utils/errorHandler';
 import { supabaseService } from './services/supabaseClient';
 
 // Import API routes
-import restaurantsRouter from './api/restaurants';
+import restaurantsRouter from './api/restaurants/index';
 import searchRouter from './api/search';
 
 const app = express();
@@ -18,7 +18,7 @@ app.use(helmet());
 // CORS configuration - Enhanced for development
 const corsOptions = {
   origin: isDevelopment 
-    ? ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'] // Allow common dev ports
+    ? ['http://localhost:3000', 'http://localhost:3000','http://localhost:5173', 'http://localhost:4173'] // Allow common dev ports
     : SERVER_CONFIG.corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

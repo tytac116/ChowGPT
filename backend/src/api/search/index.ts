@@ -50,7 +50,7 @@ router.post('/restaurants', async (req, res, next) => {
     });
   } catch (error) {
     console.error('❌ Search error:', error);
-    next(error);
+    return next(error);
   }
 });
 
@@ -66,7 +66,7 @@ router.get('/suggestions', async (req, res, next) => {
     res.json({ suggestions });
   } catch (error) {
     console.error('❌ Suggestions error:', error);
-    next(error);
+    return next(error);
   }
 });
 

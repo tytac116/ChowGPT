@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "functions": {
+    "src/lib/utils.ts": {
+      "includeFiles": "src/lib/**"
+    }
+  },
+  "github": {
+    "silent": true
+  }
+} 
