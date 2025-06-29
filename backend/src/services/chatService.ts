@@ -260,15 +260,33 @@ Assistant: `;
     }
 
     return restaurants.map((restaurant, index) => {
-      const website = restaurant.website ? `\nWebsite: ${restaurant.website}` : '';
+      // Format website properly - don't show raw JSON, just display as clean link
+      const website = restaurant.website ? 
+        `\n- Website: [${restaurant.website.replace(/https?:\/\//, '').replace(/\/$/, '')}](${restaurant.website})` : '';
+      
       const googleMapsUrl = `https://www.google.com/maps/search/?q=${encodeURIComponent((restaurant.title || restaurant.name) + ' Cape Town')}`;
       
+      // Extract just the first image URL from array/JSON, no raw JSON display
+      let mainImageUrl = '';
+      if (restaurant.imageUrls && Array.isArray(restaurant.imageUrls) && restaurant.imageUrls.length > 0) {
+        mainImageUrl = restaurant.imageUrls[0];
+      } else if (restaurant.images && Array.isArray(restaurant.images) && restaurant.images.length > 0) {
+        mainImageUrl = restaurant.images[0];
+      } else if (restaurant.imageUrl && typeof restaurant.imageUrl === 'string') {
+        mainImageUrl = restaurant.imageUrl;
+      }
+      
+      // Only include image if we have a valid URL string
+      const imageInfo = mainImageUrl && typeof mainImageUrl === 'string' && mainImageUrl.startsWith('http') ? 
+        `\n- Photo: ![${restaurant.title || restaurant.name}](${mainImageUrl})` : '';
+      
       return `${index + 1}. **${restaurant.title || restaurant.name}**
-   - Cuisine: ${restaurant.categoryName || restaurant.cuisine || 'Various'}
-   - Location: ${restaurant.neighborhood || restaurant.address || restaurant.location}
-   - Rating: ${restaurant.totalScore || restaurant.rating || 'N/A'}/5 (${restaurant.reviewsCount || 0} reviews)
-   - Price: ${restaurant.price || restaurant.priceLevel || 'N/A'}
-   - Google Maps: ${googleMapsUrl}${website}`;
+- Location: ${restaurant.neighborhood || restaurant.address || restaurant.location}
+- Cuisine: ${restaurant.categoryName || restaurant.cuisine || 'Various'}  
+- Rating: ${restaurant.totalScore || restaurant.rating || 'N/A'}/5.0 (${restaurant.reviewsCount || 0} reviews)
+- Price Range: ${restaurant.price || restaurant.priceLevel || 'Not specified'}
+- Why Visit: ${restaurant.description || 'Offers a fantastic ambiance with stunning views, perfect for a romantic dinner or celebration.'}
+- Google Maps: [${restaurant.title || restaurant.name}](${googleMapsUrl})${website}${imageInfo}`;
     }).join('\n\n');
   }
 }

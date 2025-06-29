@@ -178,7 +178,7 @@ router.get('/filters', asyncHandler(async (req, res) => {
 }));
 
 // GET /restaurants/debug/:id - Debug route to test database query
-router.get('/debug/:id', async (req: Request, res: Response) => {
+router.get('/debug/:id', async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   console.log('🔍 Debug route called with ID:', id);
   
@@ -206,7 +206,7 @@ router.get('/debug/:id', async (req: Request, res: Response) => {
 });
 
 // GET /restaurants/:id - Get detailed restaurant information (Step 3)
-router.get('/:id', validateRestaurantIdParam, async (req: Request, res: Response) => {
+router.get('/:id', validateRestaurantIdParam, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const searchQuery = req.query.q as string;
@@ -225,11 +225,12 @@ router.get('/:id', validateRestaurantIdParam, async (req: Request, res: Response
     const restaurant = await supabaseService.getDetailedRestaurant(id, searchQuery);
     
     if (!restaurant) {
-      return res.status(404).json({
+      res.status(404).json({
         code: 'NOT_FOUND',
         message: `Restaurant with ID '${id}' not found`,
         timestamp: new Date().toISOString()
       });
+      return;
     }
 
     const responseTime = Date.now() - startTime;
@@ -243,10 +244,10 @@ router.get('/:id', validateRestaurantIdParam, async (req: Request, res: Response
       hasAiExplanation: !!restaurant.aiMatchExplanation
     });
 
-    return res.json(restaurant);
+    res.json(restaurant);
   } catch (error) {
     console.error('Error in GET /api/restaurants/:id:', error);
-    return res.status(500).json({
+    res.status(500).json({
       code: 'INTERNAL_ERROR',
       message: 'Failed to fetch restaurant details',
       timestamp: new Date().toISOString()
@@ -280,11 +281,12 @@ router.post('/:id/ai-explanation', asyncHandler(async (req, res) => {
   const { userQuery } = req.body;
 
   if (!userQuery || typeof userQuery !== 'string') {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: 'User query is required',
       details: 'Please provide a valid userQuery in the request body'
     });
+    return;
   }
 
   try {
@@ -294,10 +296,11 @@ router.post('/:id/ai-explanation', asyncHandler(async (req, res) => {
     const restaurant = await supabaseService.getRestaurantById(id);
     
     if (!restaurant) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: `Restaurant with ID '${id}' not found`
       });
+      return;
     }
 
     // Build restaurant context for AI

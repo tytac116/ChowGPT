@@ -25,21 +25,23 @@ interface ChatHistoryResponse {
  * POST /api/chat/message
  * Send a message to the chatbot
  */
-export async function sendMessage(req: Request, res: Response) {
+export async function sendMessage(req: Request, res: Response): Promise<void> {
   try {
     const { message, sessionId }: ChatRequest = req.body;
 
     // Validate request
     if (!message || typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Message is required and must be a non-empty string'
       });
+      return;
     }
 
     if (!sessionId || typeof sessionId !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Session ID is required and must be a string'
       });
+      return;
     }
 
     console.log(`💬 Chat message from session ${sessionId}: ${message}`);
@@ -70,73 +72,88 @@ export async function sendMessage(req: Request, res: Response) {
  * POST /api/chat/stream
  * Send a message to the chatbot with streaming response
  */
-export async function sendStreamingMessage(req: Request, res: Response) {
+export async function sendStreamingMessage(req: Request, res: Response): Promise<void> {
   try {
     const { message, sessionId }: ChatRequest = req.body;
 
     // Validate request
     if (!message || typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Message is required and must be a non-empty string'
       });
+      return;
     }
 
     if (!sessionId || typeof sessionId !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Session ID is required and must be a string'
       });
+      return;
     }
 
     console.log(`💬 Streaming chat message from session ${sessionId}: ${message}`);
 
-    // Set up Server-Sent Events
+    // Set up Server-Sent Events with enhanced headers
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': 'Cache-Control',
+      'X-Accel-Buffering': 'no', // Disable nginx buffering
     });
 
     // Send initial connection message
     res.write(`data: ${JSON.stringify({ type: 'start', sessionId })}\n\n`);
 
     let fullResponse = '';
+    let tokenCount = 0;
 
-    // Stream the response
+    // Stream the response with improved error handling
     await chatService.sendStreamingMessage(
       sessionId,
       message.trim(),
       (token: string) => {
-        // Send each token as it arrives
+        // Send each token as it arrives with better formatting
         fullResponse += token;
-        res.write(`data: ${JSON.stringify({ 
+        tokenCount++;
+        
+        const eventData = { 
           type: 'token', 
           token, 
-          sessionId 
-        })}\n\n`);
+          sessionId,
+          tokenCount 
+        };
+        
+        res.write(`data: ${JSON.stringify(eventData)}\n\n`);
       },
       (complete: string) => {
         // Send completion message
-        res.write(`data: ${JSON.stringify({ 
+        const completionData = { 
           type: 'complete', 
           response: complete, 
           sessionId,
-          timestamp: new Date()
-        })}\n\n`);
+          timestamp: new Date(),
+          totalTokens: tokenCount
+        };
         
-        console.log(`🤖 Streaming complete for session ${sessionId}: ${complete.substring(0, 100)}...`);
+        res.write(`data: ${JSON.stringify(completionData)}\n\n`);
+        
+        console.log(`🤖 Streaming complete for session ${sessionId}: ${complete.substring(0, 100)}... (${tokenCount} tokens)`);
         res.end();
       }
     );
 
   } catch (error) {
     console.error('❌ Streaming chat API error:', error);
-    res.write(`data: ${JSON.stringify({ 
+    
+    const errorData = { 
       type: 'error', 
       error: 'Failed to process streaming message',
       details: error instanceof Error ? error.message : 'Unknown error'
-    })}\n\n`);
+    };
+    
+    res.write(`data: ${JSON.stringify(errorData)}\n\n`);
     res.end();
   }
 }
@@ -145,14 +162,15 @@ export async function sendStreamingMessage(req: Request, res: Response) {
  * GET /api/chat/history/:sessionId
  * Get chat history for a session
  */
-export async function getChatHistory(req: Request, res: Response) {
+export async function getChatHistory(req: Request, res: Response): Promise<void> {
   try {
     const { sessionId } = req.params;
 
     if (!sessionId || typeof sessionId !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Session ID is required and must be a string'
       });
+      return;
     }
 
     const messages = chatService.getSessionMessages(sessionId);
@@ -177,14 +195,15 @@ export async function getChatHistory(req: Request, res: Response) {
  * DELETE /api/chat/session/:sessionId
  * Clear a chat session
  */
-export async function clearSession(req: Request, res: Response) {
+export async function clearSession(req: Request, res: Response): Promise<void> {
   try {
     const { sessionId } = req.params;
 
     if (!sessionId || typeof sessionId !== 'string') {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Session ID is required and must be a string'
       });
+      return;
     }
 
     chatService.clearSession(sessionId);
