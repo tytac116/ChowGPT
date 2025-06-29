@@ -3,7 +3,13 @@ import { Filter, X, ChevronDown, ChevronUp, Star } from 'lucide-react'
 import { Button } from './ui/Button'
 import { FilterState, defaultFilterState } from '../types/filters'
 import { filterOptions } from '../data/filterOptions'
-import { cn } from '../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct cn implementation to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
 
 interface FilterPanelProps {
   isOpen: boolean

@@ -1,8 +1,132 @@
 import React from 'react'
 import { Star, MapPin, Users, DollarSign, ExternalLink } from 'lucide-react'
 import { Restaurant } from '../types/restaurant'
-import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel } from '../lib/utils'
-import { cn } from '../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct utility implementations to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
+
+const formatPrice = (price: string) => {
+  return price.replace(/R/g, 'R ')
+}
+
+const getMatchScoreColor = (score: number): {
+  bg: string
+  text: string
+  border?: string
+  glow?: string
+} => {
+  if (score >= 95) {
+    return {
+      bg: 'bg-emerald-500',
+      text: 'text-white',
+      border: 'border-emerald-400',
+      glow: 'shadow-emerald-500/30'
+    }
+  } else if (score >= 85) {
+    return {
+      bg: 'bg-green-500',
+      text: 'text-white',
+      border: 'border-green-400',
+      glow: 'shadow-green-500/25'
+    }
+  } else if (score >= 75) {
+    return {
+      bg: 'bg-lime-500',
+      text: 'text-white',
+      border: 'border-lime-400',
+      glow: 'shadow-lime-500/20'
+    }
+  } else if (score >= 65) {
+    return {
+      bg: 'bg-yellow-500',
+      text: 'text-gray-900',
+      border: 'border-yellow-400',
+      glow: 'shadow-yellow-500/20'
+    }
+  } else if (score >= 55) {
+    return {
+      bg: 'bg-orange-500',
+      text: 'text-white',
+      border: 'border-orange-400',
+      glow: 'shadow-orange-500/20'
+    }
+  } else if (score >= 40) {
+    return {
+      bg: 'bg-red-500',
+      text: 'text-white',
+      border: 'border-red-400',
+      glow: 'shadow-red-500/20'
+    }
+  } else {
+    return {
+      bg: 'bg-red-700',
+      text: 'text-white',
+      border: 'border-red-600',
+      glow: 'shadow-red-700/25'
+    }
+  }
+}
+
+const getMatchScoreLabel = (score: number): string => {
+  if (score >= 95) return 'Perfect Match'
+  if (score >= 85) return 'Excellent Match'
+  if (score >= 75) return 'Very Good Match'
+  if (score >= 65) return 'Good Match'
+  if (score >= 55) return 'Fair Match'
+  if (score >= 40) return 'Poor Match'
+  return 'Very Poor Match'
+}
+
+const predefinedMatchScores: Record<string, number> = {
+  '1': 97, '2': 73, '3': 85, '4': 94, '5': 68, '6': 81, '7': 92, '8': 42, '9': 89, '10': 76, '11': 35, '12': 58,
+}
+
+const generateContextualMatchScore = (restaurantId: string, searchQuery?: string): number => {
+  let baseScore = predefinedMatchScores[restaurantId] || 70
+  
+  if (searchQuery) {
+    const queryLower = searchQuery.toLowerCase()
+    let adjustment = 0
+    
+    if (queryLower.includes('fine dining')) {
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '7') adjustment += 3
+      if (restaurantId === '8' || restaurantId === '11') adjustment -= 10
+    }
+    
+    if (queryLower.includes('seafood')) {
+      if (restaurantId === '3' || restaurantId === '6' || restaurantId === '10') adjustment += 5
+      if (restaurantId === '5' || restaurantId === '8') adjustment -= 8
+    }
+    
+    if (queryLower.includes('romantic')) {
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '9') adjustment += 4
+      if (restaurantId === '8' || restaurantId === '11') adjustment -= 12
+    }
+    
+    if (queryLower.includes('family')) {
+      if (restaurantId === '3' || restaurantId === '2') adjustment += 6
+      if (restaurantId === '1' || restaurantId === '7') adjustment -= 5
+    }
+    
+    if (queryLower.includes('budget') || queryLower.includes('cheap')) {
+      if (restaurantId === '2' || restaurantId === '3' || restaurantId === '8') adjustment += 8
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '7') adjustment -= 15
+    }
+    
+    if (queryLower.includes('expensive') || queryLower.includes('luxury')) {
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '7') adjustment += 5
+      if (restaurantId === '8' || restaurantId === '11' || restaurantId === '12') adjustment -= 10
+    }
+    
+    baseScore = Math.min(99, Math.max(20, baseScore + adjustment))
+  }
+  
+  return baseScore
+}
 import { useAppState } from '../contexts/AppStateContext'
 
 interface RestaurantCardProps {

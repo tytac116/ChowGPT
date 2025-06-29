@@ -8,7 +8,53 @@ import { SearchingAnimation } from './ui/TypeWriter'
 import { useAppState } from '../contexts/AppStateContext'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
-import { generateContextualMatchScore } from '../lib/utils'
+// Direct utility implementation to avoid import issues
+const predefinedMatchScores: Record<string, number> = {
+  '1': 97, '2': 73, '3': 85, '4': 94, '5': 68, '6': 81, '7': 92, '8': 42, '9': 89, '10': 76, '11': 35, '12': 58,
+}
+
+const generateContextualMatchScore = (restaurantId: string, searchQuery?: string): number => {
+  let baseScore = predefinedMatchScores[restaurantId] || 70
+  
+  if (searchQuery) {
+    const queryLower = searchQuery.toLowerCase()
+    let adjustment = 0
+    
+    if (queryLower.includes('fine dining')) {
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '7') adjustment += 3
+      if (restaurantId === '8' || restaurantId === '11') adjustment -= 10
+    }
+    
+    if (queryLower.includes('seafood')) {
+      if (restaurantId === '3' || restaurantId === '6' || restaurantId === '10') adjustment += 5
+      if (restaurantId === '5' || restaurantId === '8') adjustment -= 8
+    }
+    
+    if (queryLower.includes('romantic')) {
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '9') adjustment += 4
+      if (restaurantId === '8' || restaurantId === '11') adjustment -= 12
+    }
+    
+    if (queryLower.includes('family')) {
+      if (restaurantId === '3' || restaurantId === '2') adjustment += 6
+      if (restaurantId === '1' || restaurantId === '7') adjustment -= 5
+    }
+    
+    if (queryLower.includes('budget') || queryLower.includes('cheap')) {
+      if (restaurantId === '2' || restaurantId === '3' || restaurantId === '8') adjustment += 8
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '7') adjustment -= 15
+    }
+    
+    if (queryLower.includes('expensive') || queryLower.includes('luxury')) {
+      if (restaurantId === '1' || restaurantId === '4' || restaurantId === '7') adjustment += 5
+      if (restaurantId === '8' || restaurantId === '11' || restaurantId === '12') adjustment -= 10
+    }
+    
+    baseScore = Math.min(99, Math.max(20, baseScore + adjustment))
+  }
+  
+  return baseScore
+}
 import { apiService, transformBackendRestaurant, BackendSearchRequest } from '../lib/api'
 
 export function RestaurantFinder() {

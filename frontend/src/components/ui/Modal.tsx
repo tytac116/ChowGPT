@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
 import { X } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct cn implementation to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
 
 interface ModalProps {
   open: boolean

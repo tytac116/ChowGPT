@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react'
 import { Button } from './ui/Button'
-import { cn } from '../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct cn implementation to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
 
 interface PhotoGalleryProps {
   images: string[]

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { searchSuggestions } from '../data/mockRestaurants'
-import { cn } from '../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct cn implementation to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
 import { apiService } from '../lib/api'
 
 interface SearchBarProps {

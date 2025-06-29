@@ -3,7 +3,13 @@ import { User, LogOut, Settings, Heart, MapPin, Calendar, ChevronDown, ChevronUp
 import { Button } from './ui/Button'
 import { Modal } from './ui/Modal'
 import { mockUser } from '../types/user'
-import { cn } from '../lib/utils'
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+// Direct cn implementation to avoid import issues
+const cn = (...inputs: ClassValue[]) => {
+  return twMerge(clsx(inputs))
+}
 
 interface UserProfileProps {
   isOpen: boolean
