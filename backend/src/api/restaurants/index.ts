@@ -11,8 +11,14 @@ import {
 } from '../../utils/validation';
 import { SearchResult } from '../../types';
 import { Request, Response } from 'express';
+import OpenAI from 'openai';
 
 const router = Router();
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Enhanced GET /restaurants - Step 2 implementation
 // Supports enhanced=true parameter to use new format
@@ -111,8 +117,6 @@ router.get('/', asyncHandler(async (req, res) => {
   }
 }));
 
-
-
 // GET /restaurants/meta/categories - Get all available categories
 router.get('/meta/categories', asyncHandler(async (req, res) => {
   try {
@@ -143,6 +147,33 @@ router.get('/meta/neighborhoods', asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Error fetching neighborhoods:', error);
     throw error;
+  }
+}));
+
+// Get filter options from real database data - MUST come before /:id route
+router.get('/filters', asyncHandler(async (req, res) => {
+  try {
+    console.log('🔧 Fetching filter options from database...');
+    
+    const filterOptions = await supabaseService.getFilterOptions();
+    
+    console.log('✅ Filter options fetched:', {
+      categories: filterOptions.categories.length,
+      neighborhoods: filterOptions.neighborhoods.length,
+      priceRanges: filterOptions.priceRanges.length
+    });
+
+    res.json({
+      success: true,
+      data: filterOptions
+    });
+  } catch (error) {
+    console.error('❌ Error fetching filter options:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch filter options',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }));
 
@@ -240,6 +271,117 @@ router.get('/:id/reviews', asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
+  }
+}));
+
+// POST /restaurants/:id/ai-explanation - Generate AI match explanation
+router.post('/:id/ai-explanation', asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { userQuery } = req.body;
+
+  if (!userQuery || typeof userQuery !== 'string') {
+    return res.status(400).json({
+      success: false,
+      error: 'User query is required',
+      details: 'Please provide a valid userQuery in the request body'
+    });
+  }
+
+  try {
+    console.log(`🤖 Generating AI explanation for restaurant ${id} with query: "${userQuery}"`);
+    
+    // Get restaurant details
+    const restaurant = await supabaseService.getRestaurantById(id);
+    
+    if (!restaurant) {
+      return res.status(404).json({
+        success: false,
+        error: `Restaurant with ID '${id}' not found`
+      });
+    }
+
+    // Build restaurant context for AI
+    const restaurantContext = `
+Restaurant: ${restaurant.title}
+Category: ${restaurant.category}
+Location: ${restaurant.neighborhood}, ${restaurant.city}
+Rating: ${restaurant.rating}/5.0 stars
+Price Range: ${restaurant.priceLevel || 'Not specified'}
+Description: ${restaurant.description || 'No description available'}
+Address: ${restaurant.address || 'Not specified'}
+Phone: ${restaurant.phone || 'Not specified'}
+`.trim();
+
+    // AI prompt for structured explanation
+    const systemPrompt = `You are a restaurant recommendation AI. Generate a structured explanation of how well a restaurant matches a user's search query.
+
+ALWAYS respond with a JSON object in this exact format:
+{
+  "overallAssessment": "Brief 1-2 sentence summary of the match quality",
+  "whatMatches": ["Specific point 1", "Specific point 2", "Specific point 3"],
+  "thingsToConsider": ["Consideration 1", "Consideration 2"]
+}
+
+Be specific and helpful. Focus on concrete details like cuisine type, location, atmosphere, price point, and unique features.`;
+
+    const userPrompt = `User is searching for: "${userQuery}"
+
+Restaurant details:
+${restaurantContext}
+
+Analyze how well this restaurant matches the user's search and provide a structured explanation.`;
+
+    const startTime = Date.now();
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 500,
+      response_format: { type: "json_object" }
+    });
+
+    const responseTime = Date.now() - startTime;
+    console.log(`✅ AI explanation generated in ${responseTime}ms`);
+
+    const aiResponse = completion.choices[0]?.message?.content;
+    
+    if (!aiResponse) {
+      throw new Error('No response from AI');
+    }
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(aiResponse);
+    } catch (parseError) {
+      throw new Error('Invalid JSON response from AI');
+    }
+
+    // Validate response structure
+    if (!parsedResponse.overallAssessment || !parsedResponse.whatMatches || !parsedResponse.thingsToConsider) {
+      throw new Error('Invalid response structure from AI');
+    }
+
+    res.json({
+      success: true,
+      data: {
+        restaurantId: id,
+        userQuery,
+        explanation: parsedResponse,
+        responseTimeMs: responseTime
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error generating AI explanation:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate AI explanation',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }));
 

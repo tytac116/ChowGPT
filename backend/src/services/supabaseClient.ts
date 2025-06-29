@@ -247,17 +247,17 @@ class SupabaseService {
   // Get all unique neighborhoods for filtering
   async getNeighborhoods(city?: string): Promise<string[]> {
     try {
-      let queryBuilder = this.client
+      let query = this.client
         .from('restaurants')
         .select('neighborhood')
         .not('neighborhood', 'is', null)
         .not('neighborhood', 'eq', '');
 
       if (city) {
-        queryBuilder = queryBuilder.eq('city', city);
+        query = query.eq('city', city);
       }
 
-      const { data, error } = await queryBuilder;
+      const { data, error } = await query;
 
       if (error || !data) {
         console.error('Error fetching neighborhoods:', error);
@@ -270,6 +270,70 @@ class SupabaseService {
     } catch (error) {
       console.error('Error in getNeighborhoods:', error);
       return [];
+    }
+  }
+
+  // Get price ranges based on actual restaurant data
+  async getPriceRanges(): Promise<string[]> {
+    try {
+      const { data, error } = await this.client
+        .from('restaurants')
+        .select('price')
+        .not('price', 'is', null)
+        .not('price', 'eq', '');
+
+      if (error || !data) {
+        console.error('Error fetching price ranges:', error);
+        return ['Under R150', 'R150-300', 'R300-500', 'R500-800', 'R800+']; // Fallback
+      }
+
+      // Extract unique price ranges from actual data
+      const priceRanges = new Set<string>();
+      data.forEach(item => {
+        if (item.price) {
+          // Normalize and categorize prices
+          const price = item.price.toString();
+          if (price.includes('R') || price.includes('$')) {
+            priceRanges.add(price);
+          }
+        }
+      });
+
+      // If we have real data, return it, otherwise use fallback
+      return priceRanges.size > 0 
+        ? Array.from(priceRanges).sort()
+        : ['Under R150', 'R150-300', 'R300-500', 'R500-800', 'R800+'];
+    } catch (error) {
+      console.error('Error in getPriceRanges:', error);
+      return ['Under R150', 'R150-300', 'R300-500', 'R500-800', 'R800+'];
+    }
+  }
+
+  // Get all filter options in one call for efficiency
+  async getFilterOptions(): Promise<{
+    categories: string[];
+    neighborhoods: string[];
+    priceRanges: string[];
+  }> {
+    try {
+      const [categories, neighborhoods, priceRanges] = await Promise.all([
+        this.getCategories(),
+        this.getNeighborhoods(),
+        this.getPriceRanges()
+      ]);
+
+      return {
+        categories,
+        neighborhoods,
+        priceRanges
+      };
+    } catch (error) {
+      console.error('Error in getFilterOptions:', error);
+      return {
+        categories: [],
+        neighborhoods: [],
+        priceRanges: ['Under R150', 'R150-300', 'R300-500', 'R500-800', 'R800+']
+      };
     }
   }
 

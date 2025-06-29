@@ -39,7 +39,7 @@ export interface RestaurantSearchResult {
 }
 
 export interface SearchResults {
-  restaurants: RestaurantSearchResult[];
+  restaurants: any[];
   searchMetadata: {
     originalQuery: string;
     rewrittenQuery: string;
@@ -130,7 +130,7 @@ export class SearchService {
    * Calculate final weighted scores
    * Vector: 20%, Keyword: 15%, LLM: 65%
    */
-  private calculateFinalScores(restaurants: any[]): RestaurantSearchResult[] {
+  private calculateFinalScores(restaurants: any[]): any[] {
     return restaurants.map(restaurant => ({
       ...restaurant,
       aiMatchScore: Math.round(

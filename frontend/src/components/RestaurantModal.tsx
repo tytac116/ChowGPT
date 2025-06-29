@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
-import { Star, MapPin, Phone, Globe, Clock, Users, ChevronLeft, ChevronRight, CheckCircle, XCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Star, MapPin, Phone, Globe, Clock, Users, ChevronLeft, ChevronRight, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { PhotoGallery } from './PhotoGallery'
 import { Restaurant, AIMatchExplanation } from '../types/restaurant'
+import { apiService, AIExplanationResponse } from '../lib/api'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { useAppState } from '../contexts/AppStateContext'
 
 // Direct utility implementations to avoid import issues
 const cn = (...inputs: ClassValue[]) => {
@@ -130,7 +132,6 @@ const generateContextualMatchScore = (restaurantId: string, searchQuery?: string
   
   return baseScore
 }
-import { useAppState } from '../contexts/AppStateContext'
 
 interface RestaurantModalProps {
   restaurant: (Restaurant & {
@@ -149,6 +150,58 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
   const { searchQuery } = useAppState()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isGalleryOpen, setIsGalleryOpen] = useState(false)
+  const [modalLoaded, setModalLoaded] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
+  const [aiExplanationLoading, setAiExplanationLoading] = useState(false)
+  const [aiExplanation, setAiExplanation] = useState<AIExplanationResponse | null>(null)
+
+  // Generate AI explanation when modal opens
+  useEffect(() => {
+    if (isOpen && restaurant && searchQuery) {
+      generateAIExplanation()
+    }
+  }, [isOpen, restaurant?.id, searchQuery])
+
+  const generateAIExplanation = async () => {
+    if (!restaurant || !searchQuery) return
+
+    try {
+      setAiExplanationLoading(true)
+      console.log(`🤖 Generating AI explanation for ${restaurant.title} with query: "${searchQuery}"`)
+      
+      const explanation = await apiService.generateAIExplanation(restaurant.id, searchQuery)
+      setAiExplanation(explanation)
+      console.log('✅ AI explanation generated:', explanation)
+    } catch (error) {
+      console.error('❌ Failed to generate AI explanation:', error)
+      setAiExplanation(null)
+    } finally {
+      setAiExplanationLoading(false)
+    }
+  }
+
+  // Reset loading states when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setModalLoaded(false)
+      setImageLoaded(false)
+      // Small delay to ensure modal renders first
+      const timer = setTimeout(() => {
+        setModalLoaded(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    } else {
+      setModalLoaded(false)
+      setImageLoaded(false)
+      setAiExplanationLoading(false)
+      setAiExplanation(null)
+    }
+  }, [isOpen])
+
+  // Reset image loaded state when current image changes
+  useEffect(() => {
+    setImageLoaded(false)
+  }, [currentImageIndex])
 
   if (!restaurant) return null
 
@@ -157,19 +210,6 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
   const matchColors = getMatchScoreColor(matchScore)
   const matchLabel = getMatchScoreLabel(matchScore)
   
-  // Create AI explanation from real backend data
-  const aiExplanation = {
-    matchPercentage: Math.round(matchScore),
-    matchReasons: restaurant.llmReasoning ? 
-      parseMatchReasons(restaurant.llmReasoning, true) : 
-      ['Good match for your search criteria'],
-    concernReasons: restaurant.llmReasoning ? 
-      parseMatchReasons(restaurant.llmReasoning, false) : 
-      [],
-    summary: restaurant.llmReasoning || 
-      `This restaurant scores ${Math.round(matchScore)}% match for your search "${searchQuery}".`
-  }
-
   const nextImage = () => {
     setCurrentImageIndex((prev) => 
       prev === restaurant.imageUrls.length - 1 ? 0 : prev + 1
@@ -201,16 +241,38 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
           {/* Left Column - Images */}
           <div className="lg:w-1/2 relative">
             <div className="relative h-64 lg:h-full">
-              <img
-                src={restaurant.imageUrls[currentImageIndex]}
-                alt={`${restaurant.title} - Image ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={() => openGallery(currentImageIndex)}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg'
-                }}
-              />
+              {/* Loading State */}
+              {!modalLoaded && (
+                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse flex items-center justify-center">
+                  <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+                </div>
+              )}
+              
+              {/* Image Loading State */}
+              {modalLoaded && !imageLoaded && (
+                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse flex items-center justify-center">
+                  <div className="text-gray-500 dark:text-gray-400">Loading image...</div>
+                </div>
+              )}
+              
+              {/* Main Image */}
+              {modalLoaded && (
+                <img
+                  src={restaurant.imageUrls[currentImageIndex]}
+                  alt={`${restaurant.title} - Image ${currentImageIndex + 1}`}
+                  className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onClick={() => openGallery(currentImageIndex)}
+                  onLoad={() => setImageLoaded(true)}
+                  onError={(e) => {
+                    // If image fails to load, hide it and show placeholder
+                    const target = e.target as HTMLImageElement
+                    target.style.display = 'none'
+                    setImageLoaded(true)
+                  }}
+                />
+              )}
               
               {/* Image Navigation */}
               {restaurant.imageUrls.length > 1 && (
@@ -253,7 +315,7 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                 matchColors.text,
                 matchColors.glow && `shadow-lg ${matchColors.glow}`
               )}>
-                {aiExplanation.matchPercentage}% Match
+                {Math.round(matchScore)}% Match
               </div>
 
               {/* Match Quality Label */}
@@ -310,7 +372,7 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                 </div>
               </div>
 
-              {/* Real AI Match Analysis - Keep as fake for now as requested */}
+              {/* Real AI Match Analysis - Using actual AI explanation */}
               <div className={cn(
                 "border rounded-lg p-4",
                 matchScore >= 80 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
@@ -334,112 +396,133 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                   </h3>
                 </div>
                 
-                {/* AI Score Breakdown */}
-                {(restaurant.vectorScore || restaurant.keywordScore || restaurant.llmScore) && (
-                  <div className="mb-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-md">
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div className="text-center">
-                        <div className="font-semibold text-gray-900 dark:text-white">
-                          {Math.round(restaurant.vectorScore || 0)}%
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Vector</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-gray-900 dark:text-white">
-                          {Math.round(restaurant.keywordScore || 0)}%
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Keyword</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold text-gray-900 dark:text-white">
-                          {Math.round(restaurant.llmScore || 0)}%
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">AI</div>
-                      </div>
-                    </div>
+                {/* AI Analysis Loading State */}
+                {aiExplanationLoading && (
+                  <div className="flex items-center space-x-3 mb-4 p-3 bg-white/50 dark:bg-gray-800/50 rounded-md">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      AI is generating match explanation...
+                    </span>
                   </div>
                 )}
                 
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                  {/* Keep fake for now as user requested */}
-                  {matchScore >= 90 ? 'Excellent match for your search criteria. This restaurant ticks all the boxes!' :
-                   matchScore >= 80 ? 'Great match! This restaurant should meet most of your requirements.' :
-                   matchScore >= 60 ? 'Good match with some relevant features for your search.' :
-                   'Partial match - some aspects align with your search criteria.'}
-                </p>
-                
-                {/* Fake Match Reasons - Keep as requested */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      What matches your search:
-                    </h4>
-                    <ul className="space-y-1">
-                    {matchScore >= 80 && (
-                      <>
-                        <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          Excellent cuisine matching your preferences
-                        </li>
-                        <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          Perfect location and atmosphere
-                        </li>
-                        <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          Great value for the experience
-                        </li>
-                      </>
+                {/* Real AI Analysis Results */}
+                {aiExplanation && !aiExplanationLoading && (
+                  <>
+                    {/* Overall Assessment */}
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+                      {aiExplanation.explanation.overallAssessment}
+                    </p>
+                    
+                    {/* What Matches */}
+                    {aiExplanation.explanation.whatMatches && aiExplanation.explanation.whatMatches.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          What matches your search:
+                        </h4>
+                        <ul className="space-y-1">
+                          {aiExplanation.explanation.whatMatches.map((match: string, index: number) => (
+                            <li key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                              <span className="text-green-500 mr-2">•</span>
+                              {match}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
-                    {matchScore >= 60 && matchScore < 80 && (
-                      <>
-                        <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          Good cuisine variety
-                        </li>
-                        <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                          <span className="text-green-500 mr-2">•</span>
-                          Suitable atmosphere
-                        </li>
-                      </>
-                    )}
-                    {matchScore < 60 && (
-                      <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                        <span className="text-green-500 mr-2">•</span>
-                        Some relevant features
-                      </li>
-                    )}
-                    </ul>
-                  </div>
 
-                {/* Fake Concerns - Keep as requested */}
-                {matchScore < 90 && (
-                  <div>
-                    <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2 flex items-center">
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Things to consider:
-                    </h4>
-                    <ul className="space-y-1">
-                      {matchScore < 80 && (
-                        <>
-                          <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                            <span className="text-orange-500 mr-2">•</span>
-                            May not fully match all preferences
+                    {/* Things to Consider */}
+                    {aiExplanation.explanation.thingsToConsider && aiExplanation.explanation.thingsToConsider.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2 flex items-center">
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Things to consider:
+                        </h4>
+                        <ul className="space-y-1">
+                          {aiExplanation.explanation.thingsToConsider.map((consideration: string, index: number) => (
+                            <li key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                              <span className="text-orange-500 mr-2">•</span>
+                              {consideration}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Fallback if AI explanation fails */}
+                {!aiExplanation && !aiExplanationLoading && (
+                  <>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                      {matchScore >= 90 ? 'Excellent match for your search criteria. This restaurant should meet your needs well!' :
+                       matchScore >= 80 ? 'Great match! This restaurant aligns well with most of your requirements.' :
+                       matchScore >= 60 ? 'Good match with several relevant features for your search.' :
+                       'Partial match - some aspects align with your search criteria.'}
+                    </p>
+                    
+                    {/* Basic fallback matching */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        What matches your search:
+                      </h4>
+                      <ul className="space-y-1">
+                        {/* Show real categories that match */}
+                        {(restaurant.categories || []).slice(0, 3).map((category, index) => (
+                          <li key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                            <span className="text-green-500 mr-2">•</span>
+                            {category}
                           </li>
+                        ))}
+                        {/* Add location if available */}
+                        {restaurant.neighborhood && (
                           <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                            <span className="text-orange-500 mr-2">•</span>
-                            Consider checking recent reviews
+                            <span className="text-green-500 mr-2">•</span>
+                            Located in {restaurant.neighborhood}
                           </li>
-                        </>
-                      )}
-                      {matchScore >= 80 && matchScore < 90 && (
-                        <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
-                          <span className="text-orange-500 mr-2">•</span>
-                          Minor aspects might not align perfectly
-                        </li>
-                      )}
-                    </ul>
-                  </div>
+                        )}
+                        {/* Add rating info if good */}
+                        {restaurant.totalScore >= 4.0 && (
+                          <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                            <span className="text-green-500 mr-2">•</span>
+                            Highly rated ({restaurant.totalScore.toFixed(1)} stars)
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+
+                    {/* Basic fallback considerations */}
+                    {matchScore < 90 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-orange-800 dark:text-orange-200 mb-2 flex items-center">
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Things to consider:
+                        </h4>
+                        <ul className="space-y-1">
+                          {matchScore < 80 && (
+                            <>
+                              <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                                <span className="text-orange-500 mr-2">•</span>
+                                May not fully match all preferences
+                              </li>
+                              <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                                <span className="text-orange-500 mr-2">•</span>
+                                Consider checking recent reviews
+                              </li>
+                            </>
+                          )}
+                          {matchScore >= 80 && matchScore < 90 && (
+                            <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                              <span className="text-orange-500 mr-2">•</span>
+                              Minor aspects might not align perfectly
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -489,17 +572,25 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Features</h3>
                 <div className="flex flex-wrap gap-2">
-                  {restaurant.reviewsTags.slice(0, 8).map((tag, index) => (
+                  {/* Use real categories instead of reviewsTags */}
+                  {(restaurant.categories || []).slice(0, 8).map((category, index) => (
                     <span
                       key={index}
                       className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm"
                     >
-                      {tag}
+                      {category}
                     </span>
                   ))}
-                  {restaurant.reviewsTags.length > 8 && (
+                  {/* Show additional categories if there are more than 8 */}
+                  {(restaurant.categories || []).length > 8 && (
                     <span className="px-3 py-1 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-full text-sm">
-                      +{restaurant.reviewsTags.length - 8} more
+                      +{(restaurant.categories || []).length - 8} more
+                    </span>
+                  )}
+                  {/* Fallback if no categories */}
+                  {(!restaurant.categories || restaurant.categories.length === 0) && (
+                    <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                      {restaurant.categoryName || 'Restaurant'}
                     </span>
                   )}
                 </div>
@@ -510,20 +601,24 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Recent Reviews</h3>
                 <div className="space-y-4">
                   {restaurant.reviews.slice(0, 5).map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0">
+                    <div key={review.reviewId || review.id} className="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900 dark:text-white">{review.author}</span>
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {review.reviewerName || review.author || 'Anonymous'}
+                          </span>
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
                               <Star
                                 key={i}
-                                className={`h-3 w-3 ${i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+                                className={`h-3 w-3 ${i < (review.rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
                               />
                             ))}
                           </div>
                         </div>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">{review.date}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {review.publishedAt || review.date || 'Recently'}
+                        </span>
                       </div>
                       <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{review.text}</p>
                     </div>

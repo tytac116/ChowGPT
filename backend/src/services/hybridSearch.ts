@@ -31,6 +31,20 @@ export interface RestaurantCandidate {
   reviews: any[];
   operatingHours?: string;
   parkingInfo?: string;
+  title?: string;
+  categoryName?: string;
+  categories?: string[];
+  totalScore?: number;
+  reviewsCount?: number;
+  price?: string;
+  averagePrice?: string;
+  imageUrl?: string;
+  imageUrls?: string[];
+  address?: string;
+  neighborhood?: string;
+  phone?: string;
+  website?: string;
+  openingHours?: any[];
 }
 
 export class HybridSearchService {
@@ -219,13 +233,9 @@ export class HybridSearchService {
         return {
           ...restaurant,
           reviews,
-          // Additional rich fields (may not be in base RestaurantResponse type)
+          // Additional rich fields
           reviewsTags: (restaurant as any).reviewsTags || [],
           popularTimes: (restaurant as any).popularTimes || {},
-          price: restaurant.priceLevel || (restaurant as any).price || '',
-          phone: restaurant.phone || '',
-          website: restaurant.website || '',
-          neighborhood: restaurant.neighborhood || '',
         };
       });
 
@@ -315,7 +325,7 @@ export class HybridSearchService {
       });
 
       // Better normalization to 0-100 scale with higher variance
-      const normalizedScore = Math.min(100, Math.round(score * 3.5)); // More generous scaling
+      const normalizedScore = Math.min(100, Math.round(score * 5)); // Much more generous scaling (was 3.5)
       const placeId = restaurant.placeId || restaurant.place_id;
       scores.set(placeId, normalizedScore);
       
@@ -409,21 +419,36 @@ export class HybridSearchService {
       }
     });
 
-    // Build combined results with correct field mapping
+    // Build combined results with correct field mapping from RestaurantResponse
     return restaurantDetails.map(restaurant => ({
-      placeId: restaurant.placeId || restaurant.place_id,
-      name: restaurant.title || restaurant.name,
-      cuisine: restaurant.categories || restaurant.cuisine || [],
-      location: restaurant.location || restaurant.address || '',
+      placeId: restaurant.placeId,
+      name: restaurant.title,
+      cuisine: restaurant.categories || [restaurant.category],
+      location: restaurant.address || '',
       description: restaurant.description || '',
-      rating: restaurant.rating || restaurant.total_score,
-      priceLevel: restaurant.priceLevel || restaurant.price_level,
-      features: restaurant.categories || [], // Use categories as features
-      vectorScore: bestVectorScores.get(restaurant.placeId || restaurant.place_id) || 0,
-      keywordScore: keywordScores.get(restaurant.placeId || restaurant.place_id) || 0,
+      rating: restaurant.rating,
+      priceLevel: restaurant.priceLevel,
+      features: restaurant.categories || [],
+      vectorScore: bestVectorScores.get(restaurant.placeId) || 0,
+      keywordScore: keywordScores.get(restaurant.placeId) || 0,
       reviews: restaurant.reviews || [],
-      operatingHours: restaurant.openingHours ? this.formatOpeningHours(restaurant.openingHours) : restaurant.operating_hours,
-      parkingInfo: restaurant.parking_info || 'Not specified',
+      operatingHours: restaurant.openingHours ? this.formatOpeningHours(restaurant.openingHours) : undefined,
+      parkingInfo: 'Not specified',
+      // Rich restaurant data with correct field names
+      title: restaurant.title,
+      categoryName: restaurant.category,
+      categories: restaurant.categories,
+      totalScore: restaurant.rating, // RestaurantResponse uses 'rating' field
+      reviewsCount: restaurant.reviewsCount,
+      price: restaurant.priceLevel,
+      averagePrice: restaurant.averagePrice, // Will be calculated separately
+      imageUrl: restaurant.imageUrl,
+      imageUrls: restaurant.images, // RestaurantResponse uses 'images' field
+      address: restaurant.address,
+      neighborhood: restaurant.neighborhood,
+      phone: restaurant.phone,
+      website: restaurant.website,
+      openingHours: restaurant.openingHours,
     }));
   }
 
@@ -578,6 +603,20 @@ export class HybridSearchService {
           reviews: [],
           operatingHours: undefined,
           parkingInfo: undefined,
+          title: restaurant.title,
+          categoryName: restaurant.categoryName,
+          categories: restaurant.categories,
+          totalScore: restaurant.total_score,
+          reviewsCount: restaurant.reviewsCount,
+          price: restaurant.price,
+          averagePrice: restaurant.averagePrice,
+          imageUrl: restaurant.imageUrl,
+          imageUrls: restaurant.imageUrls,
+          address: restaurant.address,
+          neighborhood: restaurant.neighborhood,
+          phone: restaurant.phone,
+          website: restaurant.website,
+          openingHours: restaurant.openingHours,
         }))
         .sort((a, b) => b.keywordScore - a.keywordScore)
         .slice(0, limit);

@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react'
-import { Button } from './ui/Button'
+import React, { useState, useEffect, useCallback } from 'react'
+import { X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Modal } from './ui/Modal'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-// Direct cn implementation to avoid import issues
 const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs))
 }
@@ -17,228 +16,176 @@ interface PhotoGalleryProps {
   restaurantName: string
 }
 
-export function PhotoGallery({ 
-  images, 
-  initialIndex, 
-  isOpen, 
-  onClose, 
-  restaurantName 
+export function PhotoGallery({
+  images,
+  initialIndex,
+  isOpen,
+  onClose,
+  restaurantName
 }: PhotoGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [isVisible, setIsVisible] = useState(false)
 
-  useEffect(() => {
-    setCurrentIndex(initialIndex)
-  }, [initialIndex])
-
+  // Update current index when initialIndex changes
   useEffect(() => {
     if (isOpen) {
-      // Small delay to ensure proper mounting before animation
-      const timer = setTimeout(() => setIsVisible(true), 10)
+      setCurrentIndex(initialIndex)
+      const timer = setTimeout(() => setIsVisible(true), 100)
       return () => clearTimeout(timer)
     } else {
       setIsVisible(false)
     }
-  }, [isOpen])
+  }, [initialIndex, isOpen])
 
+  // Keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyPress = (e: KeyboardEvent) => {
       if (!isOpen) return
       
       switch (e.key) {
-        case 'Escape':
-          onClose()
-          break
         case 'ArrowLeft':
+          e.preventDefault()
           goToPrevious()
           break
         case 'ArrowRight':
+          e.preventDefault()
           goToNext()
+          break
+        case 'Escape':
+          e.preventDefault()
+          handleClose()
           break
       }
     }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, currentIndex])
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length)
-  }
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
-  }
-
-  const goToImage = (index: number) => {
-    setCurrentIndex(index)
-  }
-
-  const handleArrowClick = (direction: 'next' | 'prev') => (e: React.MouseEvent) => {
-    e.stopPropagation()
-    e.preventDefault()
-    
-    if (direction === 'next') {
-      goToNext()
-    } else {
-      goToPrevious()
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyPress)
+      document.body.style.overflow = 'hidden'
     }
-  }
 
-  const handleThumbnailClick = (index: number) => (e: React.MouseEvent) => {
-    e.stopPropagation()
-    e.preventDefault()
-    goToImage(index)
-  }
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
+  const goToPrevious = useCallback(() => {
+    if (images.length <= 1) return
+    setCurrentIndex(prev => prev === 0 ? images.length - 1 : prev - 1)
+  }, [images.length])
+
+  const goToNext = useCallback(() => {
+    if (images.length <= 1) return
+    setCurrentIndex(prev => prev === images.length - 1 ? 0 : prev + 1)
+  }, [images.length])
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false)
+    setTimeout(() => {
+      onClose()
+    }, 200)
+  }, [onClose])
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    // Only close if clicking the backdrop itself, not any child elements
     if (e.target === e.currentTarget) {
-      onClose()
+      handleClose()
     }
   }
 
-  const handleImageClick = (e: React.MouseEvent) => {
-    // Prevent closing when clicking on the image
-    e.stopPropagation()
+  if (!isOpen || images.length === 0) {
+    return null
   }
-
-  const handleHeaderButtonClick = (action: () => void) => (e: React.MouseEvent) => {
-    e.stopPropagation()
-    action()
-  }
-
-  if (!isOpen) return null
 
   return (
-    <div 
-      className={cn(
-        "fixed inset-0 z-[60] bg-black/95 backdrop-blur-sm transition-all duration-300 ease-out",
-        isVisible ? "opacity-100" : "opacity-0"
-      )}
-      onClick={handleBackdropClick}
+    <Modal
+      open={isOpen}
+      onOpenChange={(open) => !open && handleClose()}
+      className="p-0 max-w-none max-h-none w-full h-full bg-black/95"
     >
-      {/* Header */}
-      <div className={cn(
-        "absolute top-0 left-0 right-0 z-[61] bg-gradient-to-b from-black/50 to-transparent transition-all duration-300 ease-out",
-        isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
-      )}>
-        <div className="flex items-center justify-between p-6">
-          <div className="text-white">
-            <h2 className="text-xl font-semibold">{restaurantName}</h2>
-            <p className="text-white/70 text-sm">
-              {currentIndex + 1} of {images.length} photos
-            </p>
+      <div 
+        className="relative w-full h-full flex items-center justify-center"
+        onClick={handleBackdropClick}
+      >
+        {/* Close Button */}
+        <div className="absolute top-4 right-4 z-50">
+          <button
+            onClick={handleClose}
+            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-200 backdrop-blur-sm"
+            aria-label="Close gallery"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+
+        {/* Image Counter */}
+        <div className="absolute top-4 left-4 z-50">
+          <div className="px-3 py-1 rounded-full bg-black/50 text-white text-sm backdrop-blur-sm">
+            {restaurantName}
           </div>
-          
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10 transition-all duration-200 transform hover:scale-110"
-              onClick={handleHeaderButtonClick(() => {
-                // Mock share functionality
-                if (navigator.share) {
-                  navigator.share({
-                    title: `${restaurantName} - Photo`,
-                    url: images[currentIndex]
-                  })
-                }
-              })}
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10 transition-all duration-200 transform hover:scale-110"
-              onClick={handleHeaderButtonClick(() => {
-                // Mock download functionality
-                const link = document.createElement('a')
-                link.href = images[currentIndex]
-                link.download = `${restaurantName}-photo-${currentIndex + 1}.jpg`
-                link.click()
-              })}
-            >
-              <Download className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/10 transition-all duration-200 transform hover:scale-110"
-              onClick={handleHeaderButtonClick(onClose)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
+          <div className="px-3 py-1 rounded-full bg-black/50 text-white text-sm backdrop-blur-sm mt-2">
+            {currentIndex + 1} of {images.length} photos
           </div>
         </div>
-      </div>
 
-      {/* Main Image Container */}
-      <div className="flex items-center justify-center h-full p-4 pt-20 pb-32">
-        <div 
-          className={cn(
-            "relative max-w-7xl max-h-full transition-all duration-500 ease-out",
-            isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
-          )}
-          onClick={handleImageClick}
-        >
+        {/* Navigation Arrows */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                goToPrevious()
+              }}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-200 backdrop-blur-sm"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                goToNext()
+              }}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-200 backdrop-blur-sm"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </button>
+          </>
+        )}
+
+        {/* Main Image */}
+        <div className="flex items-center justify-center h-full p-4 pt-20 pb-32">
           <img
             src={images[currentIndex]}
             alt={`${restaurantName} - Photo ${currentIndex + 1}`}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-300 select-none"
-            key={currentIndex} // Force re-render for smooth transitions
+            className={cn(
+              "max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-500 ease-out select-none",
+              isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+            )}
+            key={currentIndex}
             draggable={false}
-            onClick={handleImageClick}
+            onClick={(e) => e.stopPropagation()}
           />
-          
-          {/* Navigation Arrows */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={handleArrowClick('prev')}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all duration-200 hover:scale-110 active:scale-95 z-10 focus:outline-none focus:ring-2 focus:ring-white/50"
-                aria-label="Previous image"
-                type="button"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              
-              <button
-                onClick={handleArrowClick('next')}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all duration-200 hover:scale-110 active:scale-95 z-10 focus:outline-none focus:ring-2 focus:ring-white/50"
-                aria-label="Next image"
-                type="button"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-            </>
-          )}
         </div>
-      </div>
 
-      {/* Thumbnail Strip */}
-      {images.length > 1 && (
-        <div className={cn(
-          "absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent transition-all duration-300 ease-out",
-          isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        )}>
-          <div className="p-6">
-            <div className="flex justify-center space-x-2 overflow-x-auto max-w-full scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+        {/* Bottom Thumbnail Strip */}
+        {images.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+            <div className="flex space-x-2 p-2 rounded-lg bg-black/50 backdrop-blur-sm max-w-2xl overflow-x-auto">
               {images.map((image, index) => (
                 <button
                   key={index}
-                  onClick={handleThumbnailClick(index)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCurrentIndex(index)
+                  }}
                   className={cn(
-                    'flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-300 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-white/50',
-                    index === currentIndex
-                      ? 'border-white scale-110 shadow-lg'
-                      : 'border-white/30 hover:border-white/60'
+                    "flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all duration-200",
+                    index === currentIndex 
+                      ? "border-white opacity-100" 
+                      : "border-transparent opacity-60 hover:opacity-80"
                   )}
-                  aria-label={`View image ${index + 1}`}
-                  type="button"
                 >
                   <img
                     src={image}
@@ -250,8 +197,8 @@ export function PhotoGallery({
               ))}
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Modal>
   )
-}
+} 

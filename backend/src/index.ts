@@ -9,6 +9,7 @@ import { supabaseService } from './services/supabaseClient';
 // Import API routes
 import restaurantsRouter from './api/restaurants/index';
 import searchRouter from './api/search';
+import chatRouter from './api/chat/router';
 
 const app = express();
 
@@ -132,6 +133,7 @@ app.get('/health', async (req, res) => {
 // API routes
 app.use(`${SERVER_CONFIG.apiPrefix}/restaurants`, restaurantsRouter);
 app.use(`${SERVER_CONFIG.apiPrefix}/search`, searchRouter);
+app.use(`${SERVER_CONFIG.apiPrefix}/chat`, chatRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {

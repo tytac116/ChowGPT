@@ -160,15 +160,30 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
         <img
-          src={restaurant.imageUrls[0]}
+          src={restaurant.imageUrls?.[0] || ''}
           alt={restaurant.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
           onError={(e) => {
-            // Fallback to default image if load fails
+            // If image fails to load, hide it instead of showing fallback
             const target = e.target as HTMLImageElement
-            target.src = 'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg'
+            target.style.display = 'none'
           }}
         />
+        
+        {/* Only show overlay if we have a valid image */}
+        {restaurant.imageUrls?.[0] && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent group-hover:from-black/40 transition-all duration-300" />
+        )}
+        
+        {/* If no image, show placeholder */}
+        {!restaurant.imageUrls?.[0] && (
+          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+            <div className="text-gray-400 text-center">
+              <div className="text-2xl mb-2">🍽️</div>
+              <div className="text-sm">No Image Available</div>
+            </div>
+          </div>
+        )}
         
         {/* AI Match Score Badge - Enhanced with Real Data */}
         <div className={cn(
@@ -196,8 +211,6 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
             🤖 AI Analyzed
           </div>
         )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       {/* Content */}
@@ -242,20 +255,30 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
         </div>
 
         {/* Tags - Enhanced with Better Display */}
-        <div className="flex flex-wrap gap-2">
-          {restaurant.reviewsTags.slice(0, 3).map((tag, index) => (
-            <span
-              key={index}
-              className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md text-xs transition-all duration-200 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/30 group-hover:text-primary-700 dark:group-hover:text-primary-300 line-clamp-1"
-            >
-              {tag}
-            </span>
-          ))}
-          {restaurant.reviewsTags.length > 3 && (
-            <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-md text-xs transition-all duration-200 group-hover:bg-primary-100 dark:group-hover:bg-primary-900/30">
-              +{restaurant.reviewsTags.length - 3} more
-            </span>
-          )}
+        <div>
+          <div className="flex flex-wrap gap-1 mb-2">
+            {/* Use real categories instead of reviewsTags */}
+            {(restaurant.categories || []).slice(0, 3).map((category, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs"
+              >
+                {category}
+              </span>
+            ))}
+            {/* Show count if more categories exist */}
+            {(restaurant.categories || []).length > 3 && (
+              <span className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded text-xs">
+                +{(restaurant.categories || []).length - 3} more
+              </span>
+            )}
+            {/* Fallback if no categories */}
+            {(!restaurant.categories || restaurant.categories.length === 0) && (
+              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
+                {restaurant.categoryName || 'Restaurant'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* AI Score Breakdown - Only show on hover if real scores are available */}

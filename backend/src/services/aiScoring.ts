@@ -158,14 +158,14 @@ export class AIScoringService {
   }
 
   /**
-   * Build system prompt for generous restaurant scoring
+   * Build system prompt for very generous restaurant scoring
    */
   private buildSystemPrompt(): string {
-    return `Score restaurants (0-100) for query match. No explanations.
+    return `Score restaurants (0-100) for query match. Be very generous with good restaurants.
 
-SCALE: 90-100=Perfect, 80-89=Great, 70-79=Good, 60-69=OK, 50-59=Fair, 0-49=Poor
+SCALE: 85-100=Great matches, 70-84=Good matches, 55-69=Fair matches, 40-54=Poor matches, 0-39=No match
 
-OUTPUT: Just score + max 10 words reason + criteria. Be generous.`;
+Be generous! Good restaurants with any relevance should score 70+. Perfect matches score 90+.`;
   }
 
   /**

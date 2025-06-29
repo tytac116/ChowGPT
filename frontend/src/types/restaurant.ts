@@ -35,10 +35,13 @@ export interface OpeningHours {
 
 export interface Review {
   id: string
+  reviewId?: string
   author: string
+  reviewerName?: string
   rating: number
   text: string
   date: string
+  publishedAt?: string
   helpful?: number
 }
 

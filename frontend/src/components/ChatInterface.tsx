@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Sparkles, ChefHat } from 'lucide-react'
 import { Button } from './ui/Button'
 import { useAppState } from '../contexts/AppStateContext'
+import { apiService, ChatMessage } from '../lib/api'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -18,16 +19,6 @@ interface Message {
   isTyping?: boolean
 }
 
-const mockResponses = [
-  "I'd be happy to help you find the perfect restaurant in Cape Town! Based on your request, I can recommend several excellent options. What type of cuisine or dining experience are you looking for?",
-  "For romantic oceanfront dining, I highly recommend **The Test Kitchen** in Woodstock or **Two Oceans Restaurant** at Cape Point. Both offer stunning views and exceptional cuisine. Would you like more details about either of these?",
-  "Cape Town has incredible seafood! **Ocean Basket** at the V&A Waterfront is perfect for families, while **Two Oceans Restaurant** offers a more upscale experience. For something unique, try the fresh catch at **Kalk Bay** harbor restaurants.",
-  "For authentic African cuisine, **Mama Africa** on Long Street is a must-visit! They offer traditional dishes with live music and cultural performances. The atmosphere is vibrant and perfect for experiencing local culture.",
-  "Budget-friendly options under R300 include **Ocean Basket** for seafood, local cafes in **Kloof Street**, and many excellent spots in **Observatory**. Would you like specific recommendations in any particular neighborhood?",
-  "**La Colombe** in Constantia is perfect for special occasions! It's set on a beautiful wine estate with mountain views and offers world-class fine dining. I'd recommend making reservations well in advance.",
-  "For vegetarian options, Cape Town has excellent choices! **Plant Cafe** in Bree Street, **Scheckter's Raw** for healthy options, and most restaurants offer great vegetarian menus. What type of vegetarian cuisine interests you most?"
-]
-
 const suggestedQuestions = [
   "What are the best seafood restaurants in Cape Town?",
   "Find me a romantic dinner spot with ocean views",
@@ -39,10 +30,16 @@ const suggestedQuestions = [
   "Recommend wine estates with good food near Cape Town"
 ]
 
+// Generate a unique session ID for this browser session
+const generateSessionId = () => {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
 export function ChatInterface() {
   const { chatMessages, setChatMessages } = useAppState()
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [sessionId] = useState(() => generateSessionId())
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -53,6 +50,29 @@ export function ChatInterface() {
   useEffect(() => {
     scrollToBottom()
   }, [chatMessages])
+
+  // Load chat history on component mount
+  useEffect(() => {
+    const loadChatHistory = async () => {
+      try {
+        const history = await apiService.getChatHistory(sessionId)
+        if (history.messages.length > 0) {
+          const formattedMessages = history.messages.map(msg => ({
+            id: `${msg.timestamp}_${msg.role}`,
+            type: msg.role,
+            content: msg.content,
+            timestamp: new Date(msg.timestamp)
+          }))
+          setChatMessages(formattedMessages)
+        }
+      } catch (error) {
+        console.error('Failed to load chat history:', error)
+        // Don't show error to user, just start with empty chat
+      }
+    }
+
+    loadChatHistory()
+  }, [sessionId, setChatMessages])
 
   // Convert stored messages to proper Date objects
   const messages = chatMessages.map(msg => ({
@@ -74,19 +94,33 @@ export function ChatInterface() {
     setInputValue('')
     setIsTyping(true)
 
-    // Simulate AI thinking time
-    setTimeout(() => {
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)]
+    try {
+      // Send message to ChatService
+      const response = await apiService.sendChatMessage(userMessage.content, sessionId)
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'assistant',
-        content: randomResponse,
-        timestamp: new Date()
+        content: response.response,
+        timestamp: new Date(response.timestamp)
       }
 
       setChatMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Failed to send chat message:', error)
+      
+      // Show error message to user
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: "I'm sorry, I encountered an error processing your request. Please try again.",
+        timestamp: new Date()
+      }
+
+      setChatMessages(prev => [...prev, errorMessage])
+    } finally {
       setIsTyping(false)
-    }, 1500 + Math.random() * 1000) // Random delay between 1.5-2.5 seconds
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -102,8 +136,18 @@ export function ChatInterface() {
   }
 
   const formatMessage = (content: string) => {
-    // Simple markdown-like formatting for bold text
-    return content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Enhanced formatting for restaurant recommendations
+    let formatted = content
+      // Bold text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Make Google Maps links clickable
+      .replace(/(https:\/\/www\.google\.com\/maps\/search\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">Google Maps</a>')
+      // Make website links clickable
+      .replace(/(https:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">Visit Website</a>')
+      // Convert line breaks to <br>
+      .replace(/\n/g, '<br>')
+
+    return formatted
   }
 
   return (
@@ -177,17 +221,20 @@ export function ChatInterface() {
               <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </div>
             <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">AI is thinking...</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Suggested Questions (only show when no messages or just the initial message) */}
-        {messages.length <= 1 && !isTyping && (
+        {/* Suggested Questions (only show when no messages) */}
+        {messages.length === 0 && !isTyping && (
           <div className="max-w-4xl mr-auto">
             <div className="mb-4">
               <div className="flex items-center space-x-2 mb-3">

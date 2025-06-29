@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Filter, X, ChevronDown, ChevronUp, Star } from 'lucide-react'
 import { Button } from './ui/Button'
 import { FilterState, defaultFilterState } from '../types/filters'
-import { filterOptions } from '../data/filterOptions'
+import { apiService } from '../lib/api'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -36,6 +36,36 @@ export function FilterPanel({
     features: false
   })
 
+  // Real filter options from backend
+  const [filterOptions, setFilterOptions] = useState({
+    categories: [] as string[],
+    neighborhoods: [] as string[],
+    priceRanges: ['Under R150', 'R150-300', 'R300-500', 'R500-800', 'R800+'] as string[]
+  })
+  const [isLoadingFilters, setIsLoadingFilters] = useState(true)
+
+  // Fetch real filter options on component mount
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        setIsLoadingFilters(true)
+        const options = await apiService.getFilterOptions()
+        setFilterOptions({
+          categories: options.categories,
+          neighborhoods: options.neighborhoods,
+          priceRanges: options.priceRanges.length > 0 ? options.priceRanges : ['Under R150', 'R150-300', 'R300-500', 'R500-800', 'R800+']
+        })
+      } catch (error) {
+        console.error('Failed to fetch filter options:', error)
+        // Keep default fallback values if fetching fails
+      } finally {
+        setIsLoadingFilters(false)
+      }
+    }
+
+    fetchFilterOptions()
+  }, [])
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -67,13 +97,7 @@ export function FilterPanel({
     onFiltersChange({ ...filters, selectedNeighborhoods: updated })
   }
 
-  const handleFeatureChange = (feature: string) => {
-    const updated = filters.selectedFeatures.includes(feature)
-      ? filters.selectedFeatures.filter(f => f !== feature)
-      : [...filters.selectedFeatures, feature]
-    
-    onFiltersChange({ ...filters, selectedFeatures: updated })
-  }
+
 
   const clearAllFilters = () => {
     onFiltersChange(defaultFilterState)
@@ -234,7 +258,7 @@ export function FilterPanel({
             onToggle={() => toggleSection('rating')}
           >
             <div className="space-y-2">
-              {filterOptions.ratings.map((rating) => (
+              {[4.5, 4.0, 3.5, 3.0].map((rating) => (
                 <label key={rating} className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="radio"
@@ -289,28 +313,7 @@ export function FilterPanel({
             </div>
           </FilterSection>
 
-          {/* Features */}
-          <FilterSection
-            title="Features"
-            isExpanded={expandedSections.features}
-            onToggle={() => toggleSection('features')}
-          >
-            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-              {filterOptions.features.map((feature) => (
-                <label key={feature} className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={filters.selectedFeatures.includes(feature)}
-                    onChange={() => handleFeatureChange(feature)}
-                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
-                    {feature}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </FilterSection>
+
 
           {/* Apply Button */}
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">

@@ -176,11 +176,7 @@ function extractLocationString(location: string | { lat: number; lng: number }):
 }
 
 function getDefaultImages(): string[] {
-  return [
-    'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg',
-    'https://images.pexels.com/photos/2788792/pexels-photo-2788792.jpeg',
-    'https://images.pexels.com/photos/1581384/pexels-photo-1581384.jpeg'
-  ]
+  return []
 }
 
 function transformOpeningHours(openingHours?: any[]): any {
@@ -230,8 +226,8 @@ function transformBackendRestaurant(backendRestaurant: BackendRestaurant): any {
     address: backendRestaurant.address || '',
     neighborhood: backendRestaurant.neighborhood || extractLocationString(backendRestaurant.location),
     reviewsTags: backendRestaurant.features || [],
-    imagesCount: backendRestaurant.images?.length || backendRestaurant.imageUrls?.length || 3,
-    imageUrls: backendRestaurant.images || backendRestaurant.imageUrls || getDefaultImages(),
+    imagesCount: backendRestaurant.images?.length || backendRestaurant.imageUrls?.length || 0,
+    imageUrls: backendRestaurant.images || backendRestaurant.imageUrls || [],
     phone: backendRestaurant.phone,
     website: backendRestaurant.website,
     openingHours: transformOpeningHours(backendRestaurant.openingHours),
