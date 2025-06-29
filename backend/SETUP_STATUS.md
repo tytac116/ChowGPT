@@ -49,6 +49,8 @@
 - ✅ **Real-time status** - Check if restaurants are currently open
 - ✅ **Enhanced validation** - Comprehensive query parameter validation with Zod
 - ✅ **Rich metadata** - Search timing, type classification, and result metrics
+- ✅ **Categories array** - Complete list of all restaurant categories (not just primary)
+- ✅ **Average price calculation** - Smart calculation from review contexts with price per person data
 - ✅ **Backward compatibility** - Legacy API format still supported
 
 ### **All Requested Step 2 Fields Working**
@@ -64,6 +66,8 @@
 - ✅ `matchScore` (relevance scoring 0-100)
 - ✅ `isOpenNow` (real-time status)
 - ✅ `location` (parsed coordinates)
+- ✅ `categories` (array of all restaurant categories)
+- ✅ `averagePrice` (calculated from review contexts - e.g., "R 329–400")
 
 ### **Dependencies Successfully Installed**
 - ✅ **Node.js v20.19.3** + **npm v10.8.2** (fresh installation)
@@ -142,7 +146,7 @@ OpenAI API (AI features)
 
 ### **What's Working:**
 - ✅ **All Step 2 features implemented** - Enhanced API with proper TEXT parsing, smart tags, match scoring
-- ✅ **All requested fields working** - id, title, categoryName, totalScore, reviewsCount, price, imageUrl, reviewsTags, matchScore, etc.
+- ✅ **All requested fields working** - id, title, categoryName, categories, totalScore, reviewsCount, price, averagePrice, imageUrl, reviewsTags, matchScore, etc.
 - ✅ **Advanced search capabilities** - Multi-field search, sorting, filtering, real-time status
 - ✅ **Performance optimized** - ~200-250ms response times with efficient parsing
 - ✅ **Production ready** - Full error handling, validation, security middleware
@@ -153,6 +157,8 @@ OpenAI API (AI features)
 - **INTELLIGENT TAGGING**: Automatic extraction of relevant tags from categories and descriptions  
 - **RELEVANCE SCORING**: Match algorithm providing 0-100 relevance scores for search results
 - **REAL-TIME STATUS**: Opening hours parsing to show if restaurants are currently open
+- **DYNAMIC PRICING**: Average price calculation from actual customer review contexts
+- **CATEGORIES ENHANCEMENT**: Both primary category and complete categories array returned
 - **BACKWARD COMPATIBILITY**: Legacy API still works alongside enhanced version
 
 **🚀 Ready for**: Frontend integration - All APIs documented and tested

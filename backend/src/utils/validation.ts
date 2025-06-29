@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SearchFilters, SearchQuery, VectorSearchQuery } from '../types';
+import { Request, Response, NextFunction } from 'express';
 
 // Base validation schemas
 export const paginationSchema = z.object({
@@ -98,6 +99,34 @@ export const sanitizeSearchQuery = (query: string): string => {
     .replace(/[{}]/g, '') // Remove curly braces
     .trim()
     .slice(0, 500);
+};
+
+// Middleware function to validate restaurant ID parameter
+export const validateRestaurantIdParam = (req: Request, res: Response, next: NextFunction): void => {
+  try {
+    const { id } = req.params;
+    
+    if (!id || typeof id !== 'string') {
+      res.status(400).json({
+        code: 'BAD_REQUEST',
+        message: 'Restaurant ID parameter is required',
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    // Validate the ID format
+    validateRestaurantId(id);
+    
+    // If validation passes, continue to the next middleware
+    next();
+  } catch (error) {
+    res.status(400).json({
+      code: 'BAD_REQUEST',
+      message: `Invalid restaurant ID format: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      timestamp: new Date().toISOString()
+    });
+  }
 };
 
 export type EnhancedRestaurantSearchQuery = z.infer<typeof enhancedRestaurantSearchSchema>; 

@@ -2,13 +2,15 @@ import { Router } from 'express';
 import { supabaseService } from '../../services/supabaseClient';
 import { asyncHandler, createNotFoundError } from '../../utils/errorHandler';
 import { 
+  validateSearchFilters, 
+  validatePagination,
   enhancedRestaurantSearchSchema,
-  restaurantIdSchema,
-  validateSearchQuery, 
-  validateRestaurantId, 
-  validatePagination 
+  validateRestaurantId,
+  validateRestaurantIdParam,
+  EnhancedRestaurantSearchQuery 
 } from '../../utils/validation';
 import { SearchResult } from '../../types';
+import { Request, Response } from 'express';
 
 const router = Router();
 
@@ -109,83 +111,7 @@ router.get('/', asyncHandler(async (req, res) => {
   }
 }));
 
-// GET /restaurants/:id - Get restaurant details
-router.get('/:id', asyncHandler(async (req, res) => {
-  const placeId = validateRestaurantId(req.params.id);
-  
-  try {
-    // Fetch restaurant details
-    const restaurant = await supabaseService.getRestaurantById(placeId);
-    
-    if (!restaurant) {
-      throw createNotFoundError('Restaurant', placeId);
-    }
 
-    // Fetch reviews for this restaurant
-    const reviewsLimit = parseInt(req.query.reviewsLimit as string) || 10;
-    const reviewsOffset = parseInt(req.query.reviewsOffset as string) || 0;
-    
-    const { reviews, total: reviewsTotal } = await supabaseService.getReviewsForRestaurant(
-      placeId,
-      reviewsLimit,
-      reviewsOffset
-    );
-
-    const result = {
-      ...restaurant,
-      reviews: {
-        data: reviews,
-        total: reviewsTotal,
-        hasMore: reviewsOffset + reviews.length < reviewsTotal,
-      }
-    };
-
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching restaurant details:', error);
-    throw error;
-  }
-}));
-
-// GET /restaurants/:id/reviews - Get reviews for a specific restaurant
-router.get('/:id/reviews', asyncHandler(async (req, res) => {
-  const placeId = validateRestaurantId(req.params.id);
-  const limit = parseInt(req.query.limit as string) || 10;
-  const offset = parseInt(req.query.offset as string) || 0;
-  
-  const pagination = validatePagination({ limit, offset });
-
-  try {
-    // Verify restaurant exists
-    const restaurant = await supabaseService.getRestaurantById(placeId);
-    if (!restaurant) {
-      throw createNotFoundError('Restaurant', placeId);
-    }
-
-    // Fetch reviews
-    const { reviews, total } = await supabaseService.getReviewsForRestaurant(
-      placeId,
-      pagination.limit,
-      pagination.offset
-    );
-
-    const result = {
-      reviews,
-      total,
-      hasMore: pagination.offset + reviews.length < total,
-      restaurantId: placeId,
-      pagination: {
-        limit: pagination.limit,
-        offset: pagination.offset,
-      }
-    };
-
-    res.json(result);
-  } catch (error) {
-    console.error('Error fetching restaurant reviews:', error);
-    throw error;
-  }
-}));
 
 // GET /restaurants/meta/categories - Get all available categories
 router.get('/meta/categories', asyncHandler(async (req, res) => {
@@ -216,6 +142,103 @@ router.get('/meta/neighborhoods', asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching neighborhoods:', error);
+    throw error;
+  }
+}));
+
+// GET /restaurants/debug/:id - Debug route to test database query
+router.get('/debug/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  console.log('🔍 Debug route called with ID:', id);
+  
+  try {
+    // Test basic getRestaurantById first
+    const basicRestaurant = await supabaseService.getRestaurantById(id);
+    console.log('📊 Basic restaurant result:', !!basicRestaurant);
+    
+    // Test our getDetailedRestaurant method with detailed debugging
+    console.log('🔍 Starting detailed restaurant method...');
+    const detailedRestaurant = await supabaseService.getDetailedRestaurant(id);
+    console.log('📊 Detailed restaurant result:', !!detailedRestaurant);
+    
+    res.json({
+      id,
+      basicRestaurantFound: !!basicRestaurant,
+      detailedRestaurantFound: !!detailedRestaurant,
+      basicRestaurant: basicRestaurant ? { title: basicRestaurant.title, placeId: basicRestaurant.placeId } : null,
+      detailedRestaurant: detailedRestaurant ? { title: detailedRestaurant.title, id: detailedRestaurant.id } : null
+    });
+  } catch (error) {
+    console.error('🚨 Debug route error:', error);
+    res.status(500).json({ error: 'Debug failed', details: error instanceof Error ? error.message : 'Unknown error' });
+  }
+});
+
+// GET /restaurants/:id - Get detailed restaurant information (Step 3)
+router.get('/:id', validateRestaurantIdParam, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const searchQuery = req.query.q as string;
+
+    console.log(`GET /api/restaurants/${id}`, {
+      params: req.params,
+      query: req.query,
+      headers: {
+        host: req.get('host'),
+        'user-agent': req.get('user-agent'),
+        accept: req.get('accept')
+      }
+    });
+
+    const startTime = Date.now();
+    const restaurant = await supabaseService.getDetailedRestaurant(id, searchQuery);
+    
+    if (!restaurant) {
+      return res.status(404).json({
+        code: 'NOT_FOUND',
+        message: `Restaurant with ID '${id}' not found`,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const responseTime = Date.now() - startTime;
+    console.log(`✅ Detailed restaurant retrieved in ${responseTime}ms:`, {
+      id: restaurant.id,
+      title: restaurant.title,
+      totalScore: restaurant.totalScore,
+      reviewsCount: restaurant.reviewsCount,
+      reviewsReturned: restaurant.reviews.length,
+      imagesCount: restaurant.images.length,
+      hasAiExplanation: !!restaurant.aiMatchExplanation
+    });
+
+    return res.json(restaurant);
+  } catch (error) {
+    console.error('Error in GET /api/restaurants/:id:', error);
+    return res.status(500).json({
+      code: 'INTERNAL_ERROR',
+      message: 'Failed to fetch restaurant details',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// GET /restaurants/:id/reviews - Get reviews for a specific restaurant
+router.get('/:id/reviews', asyncHandler(async (req, res) => {
+  const placeId = validateRestaurantId(req.params.id);
+  const limit = parseInt(req.query.limit as string) || 10;
+  const offset = parseInt(req.query.offset as string) || 0;
+
+  try {
+    const result = await supabaseService.getReviewsForRestaurant(placeId, limit, offset);
+    
+    if (!result.reviews || result.reviews.length === 0) {
+      throw createNotFoundError(`No reviews found for restaurant with ID '${placeId}'`);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Database query error:', error);
     throw error;
   }
 }));

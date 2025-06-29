@@ -215,4 +215,102 @@ export interface RestaurantCardResponse {
     lat: number;
     lng: number;
   };
+}
+
+// Detailed restaurant interface for Step 3 - comprehensive restaurant profile for modal/page
+export interface DetailedRestaurantResponse {
+  // All preliminary fields from Step 2
+  id: string;
+  title: string;
+  categoryName: string;
+  categories: string[];
+  address: string;
+  neighborhood?: string;
+  totalScore: number;
+  reviewsCount: number;
+  price: string;
+  averagePrice?: string;
+  imageUrl: string;
+  reviewsTags: string[];
+  matchScore: number;
+  
+  // Additional detailed fields for Step 3
+  phone?: string;
+  website?: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  openingHours: OpeningHour[];
+  popularTimes?: PopularTimesData; // Histogram data for popular times
+  reviews: DetailedReviewResponse[]; // Up to 25 reviews with full details
+  images: string[]; // Gallery URLs
+  serviceOptions?: ServiceOptions; // Service options and accessibility
+  aiMatchExplanation?: string; // AI-generated match explanation (mock for now)
+  
+  // Additional metadata
+  description?: string;
+  isOpenNow: boolean;
+  lastUpdated: string;
+}
+
+export interface PopularTimesData {
+  // Mock structure for popular times histogram
+  // Will be enhanced when real data becomes available
+  weekdays: {
+    [day: string]: {
+      hour: number;
+      popularity: number; // 0-100
+    }[];
+  };
+  peakHours: string[]; // e.g., ["12:00-13:00", "19:00-20:00"]
+  quietestHours: string[]; // e.g., ["14:00-16:00"]
+}
+
+export interface ServiceOptions {
+  dineIn?: boolean;
+  takeaway?: boolean;
+  delivery?: boolean;
+  reservations?: boolean;
+  wheelchairAccessible?: boolean;
+  goodForGroups?: boolean;
+  goodForKids?: boolean;
+  acceptsCreditCards?: boolean;
+  hasWifi?: boolean;
+  hasParking?: boolean;
+  outdoorSeating?: boolean;
+  liveMusic?: boolean;
+  petsAllowed?: boolean;
+}
+
+export interface DetailedReviewResponse {
+  reviewId: string;
+  placeId: string;
+  rating: number;
+  reviewerName: string;
+  text: string;
+  publishedAt: string;
+  publishedDate: Date;
+  reviewerReviewCount: number;
+  isLocalGuide: boolean;
+  language: string;
+  images: string[];
+  // Additional detailed review fields
+  reviewContext?: {
+    service?: string;
+    mealType?: string;
+    pricePerPerson?: string;
+    waitTime?: string;
+  };
+  detailedRating?: {
+    food?: number;
+    service?: number;
+    atmosphere?: number;
+    value?: number;
+  };
+  ownerResponse?: {
+    text: string;
+    date: string;
+  };
+  likesCount?: number;
 } 
