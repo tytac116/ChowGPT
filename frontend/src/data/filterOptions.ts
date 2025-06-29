@@ -65,5 +65,5 @@ export const filterOptions: FilterOptions = {
     'Late Night'
   ],
   openNow: false,
-  sortBy: 'relevance'
+  sortBy: 'ai-match'
 }

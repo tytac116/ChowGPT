@@ -8,20 +8,24 @@ import { supabaseService } from './services/supabaseClient';
 
 // Import API routes
 import restaurantsRouter from './api/restaurants';
-// import searchRouter from './api/search'; // Will be added later
+import searchRouter from './api/search';
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
 
-// CORS configuration
-app.use(cors({
-  origin: SERVER_CONFIG.corsOrigin,
+// CORS configuration - Enhanced for development
+const corsOptions = {
+  origin: isDevelopment 
+    ? ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4173'] // Allow common dev ports
+    : SERVER_CONFIG.corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -72,8 +76,8 @@ app.get('/health', async (req, res) => {
       },
       features: {
         basicSearch: true,
-        vectorSearch: false, // Will be enabled later
-        aiFeatures: false, // Will be enabled later
+        vectorSearch: true,
+        aiFeatures: true,
       }
     };
 
@@ -94,7 +98,7 @@ app.get('/health', async (req, res) => {
 
 // API routes
 app.use(`${SERVER_CONFIG.apiPrefix}/restaurants`, restaurantsRouter);
-// app.use(`${SERVER_CONFIG.apiPrefix}/search`, searchRouter); // Will be added later
+app.use(`${SERVER_CONFIG.apiPrefix}/search`, searchRouter);
 
 // Root endpoint
 app.get('/', (req, res) => {
@@ -106,12 +110,12 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       restaurants: `${SERVER_CONFIG.apiPrefix}/restaurants`,
-      // search: `${SERVER_CONFIG.apiPrefix}/search`, // Will be added later
+      search: `${SERVER_CONFIG.apiPrefix}/search`,
     },
     features: {
       basicSearch: true,
-      vectorSearch: false,
-      aiFeatures: false,
+      vectorSearch: true,
+      aiFeatures: true,
     }
   });
 });

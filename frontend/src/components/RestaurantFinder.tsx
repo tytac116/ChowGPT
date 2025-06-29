@@ -4,10 +4,12 @@ import { RestaurantCard } from './RestaurantCard'
 import { RestaurantModal } from './RestaurantModal'
 import { FilterPanel } from './FilterPanel'
 import { LoadingSpinner } from './ui/LoadingSpinner'
+import { SearchingAnimation } from './ui/TypeWriter'
 import { useAppState } from '../contexts/AppStateContext'
-import { mockRestaurants } from '../data/mockRestaurants'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
+import { generateContextualMatchScore } from '../lib/utils'
+import { apiService, transformBackendRestaurant, BackendSearchRequest } from '../lib/api'
 
 export function RestaurantFinder() {
   const {
@@ -28,20 +30,52 @@ export function RestaurantFinder() {
   } = useAppState()
 
   const [isLoading, setIsLoading] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [searchMetadata, setSearchMetadata] = useState<any>(null)
 
   const handleSearch = async (query: string) => {
     setIsLoading(true)
     setHasSearched(true)
     setSearchQuery(query)
+    setSearchError(null)
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // For demo purposes, return shuffled mock data
-    const shuffledRestaurants = [...mockRestaurants].sort(() => Math.random() - 0.5)
-    setRestaurants(shuffledRestaurants)
-    setFilteredRestaurants(shuffledRestaurants)
-    setIsLoading(false)
+    try {
+      console.log('🔍 Searching for:', query)
+      
+      const searchRequest: BackendSearchRequest = {
+        query: query.trim(),
+        limit: 9,
+        filters: {
+          // Map frontend filters to backend format if needed
+          ...(filters.selectedCategories.length > 0 && { cuisine: filters.selectedCategories }),
+          ...(filters.minRating > 0 && { rating: filters.minRating }),
+          ...(filters.selectedNeighborhoods.length > 0 && { location: filters.selectedNeighborhoods[0] }),
+          ...(filters.selectedFeatures.length > 0 && { features: filters.selectedFeatures }),
+        }
+      }
+
+      // Call real backend API
+      const searchResponse = await apiService.searchRestaurants(searchRequest)
+      
+      console.log('✅ Search response:', searchResponse)
+      setSearchMetadata(searchResponse.data.searchMetadata)
+
+      // Transform backend restaurants to frontend format
+      const transformedRestaurants = searchResponse.data.restaurants.map(transformBackendRestaurant)
+      
+      setRestaurants(transformedRestaurants)
+      setFilteredRestaurants(transformedRestaurants)
+
+      console.log(`🎯 Found ${transformedRestaurants.length} restaurants`)
+      
+    } catch (error) {
+      console.error('❌ Search failed:', error)
+      setSearchError(error instanceof Error ? error.message : 'Search failed. Please try again.')
+      setRestaurants([])
+      setFilteredRestaurants([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const applyFilters = () => {
@@ -56,14 +90,14 @@ export function RestaurantFinder() {
       )
     }
 
-    // Apply price range filter
+    // Apply price range filter - Updated for South African Rands
     if (filters.selectedPriceRanges.length > 0) {
       filtered = filtered.filter(restaurant => {
         const price = restaurant.price
         return filters.selectedPriceRanges.some(range => {
           switch (range) {
             case 'Under R150':
-              return price.includes('R120') || price.includes('R100') || price.includes('R80')
+              return price.includes('R100') || price.includes('R120') || price.includes('R80') || price.includes('R50')
             case 'R150-300':
               return price.includes('R150') || price.includes('R180') || price.includes('R200') || price.includes('R300')
             case 'R300-500':
@@ -112,24 +146,35 @@ export function RestaurantFinder() {
       })
     }
 
-    // Apply sorting
+    // Apply sorting - Updated to include AI match scoring
     switch (filters.sortBy) {
+      case 'ai-match':
+        filtered.sort((a, b) => {
+          // Use real AI match scores if available, otherwise fall back to contextual scoring
+          const scoreA = (a as any).aiMatchScore || generateContextualMatchScore(a.id, searchQuery)
+          const scoreB = (b as any).aiMatchScore || generateContextualMatchScore(b.id, searchQuery)
+          return scoreB - scoreA
+        })
+        break
       case 'rating':
         filtered.sort((a, b) => b.totalScore - a.totalScore)
         break
-      case 'price':
+      case 'price-low':
         filtered.sort((a, b) => {
           const priceA = parseInt(a.price.match(/\d+/)?.[0] || '0')
           const priceB = parseInt(b.price.match(/\d+/)?.[0] || '0')
           return priceA - priceB
         })
         break
-      case 'distance':
-        // Mock distance sorting
-        filtered.sort(() => Math.random() - 0.5)
+      case 'price-high':
+        filtered.sort((a, b) => {
+          const priceA = parseInt(a.price.match(/\d+/)?.[0] || '0')
+          const priceB = parseInt(b.price.match(/\d+/)?.[0] || '0')
+          return priceB - priceA
+        })
         break
       default:
-        // Keep relevance order
+        // Keep AI relevance order (default from backend)
         break
     }
 
@@ -162,16 +207,51 @@ export function RestaurantFinder() {
         <SearchBar onSearch={handleSearch} isLoading={isLoading} initialQuery={searchQuery} />
       </div>
 
-      {/* Loading State */}
+      {/* Enhanced Loading State with TypeWriter Animation */}
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-16">
-          <LoadingSpinner size="lg" className="mb-4" />
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-2">
-            Finding the perfect restaurants for you...
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Our AI is analyzing your preferences
-          </p>
+          <LoadingSpinner size="lg" className="mb-6" />
+          <SearchingAnimation searchQuery={searchQuery} />
+          
+          {/* Search metadata during loading */}
+          <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+            <p>🤖 AI-powered search • Vector similarity • Contextual matching</p>
+          </div>
+        </div>
+      )}
+
+      {/* Search Error State */}
+      {searchError && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
+          <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+            Search Failed
+          </h3>
+          <p className="text-red-600 dark:text-red-300 mb-4">{searchError}</p>
+          <button
+            onClick={() => handleSearch(searchQuery)}
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Search Performance Metadata */}
+      {searchMetadata && !isLoading && restaurants.length > 0 && (
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <span>⚡ Search completed in {searchMetadata.totalProcessingTime}ms</span>
+              <span>🔄 Query rewritten: "{searchMetadata.rewrittenQuery}"</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              {searchMetadata.searchSteps.map((step: string, index: number) => (
+                <span key={index} className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                  {step}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -227,7 +307,13 @@ export function RestaurantFinder() {
                 <button
                   onClick={() => {
                     setFilters(defaultFilterState)
-                    setFilteredRestaurants(restaurants)
+                    // Re-apply AI sorting when clearing filters
+                    const sortedByAI = [...restaurants].sort((a, b) => {
+                      const scoreA = (a as any).aiMatchScore || generateContextualMatchScore(a.id, searchQuery)
+                      const scoreB = (b as any).aiMatchScore || generateContextualMatchScore(b.id, searchQuery)
+                      return scoreB - scoreA
+                    })
+                    setFilteredRestaurants(sortedByAI)
                   }}
                   className="text-primary-600 hover:text-primary-700 font-medium"
                 >
@@ -240,7 +326,7 @@ export function RestaurantFinder() {
       )}
 
       {/* No Results State */}
-      {!isLoading && hasSearched && restaurants.length === 0 && (
+      {!isLoading && hasSearched && restaurants.length === 0 && !searchError && (
         <div className="text-center py-16">
           <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
             <SearchIcon className="h-12 w-12 text-gray-400" />

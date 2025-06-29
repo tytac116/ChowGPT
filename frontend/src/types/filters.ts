@@ -5,7 +5,7 @@ export interface FilterOptions {
   neighborhoods: string[]
   features: string[]
   openNow: boolean
-  sortBy: 'relevance' | 'rating' | 'price' | 'distance'
+  sortBy: 'ai-match' | 'relevance' | 'rating' | 'price-low' | 'price-high'
 }
 
 export interface FilterState {
@@ -15,7 +15,7 @@ export interface FilterState {
   selectedNeighborhoods: string[]
   selectedFeatures: string[]
   openNow: boolean
-  sortBy: 'relevance' | 'rating' | 'price' | 'distance'
+  sortBy: 'ai-match' | 'relevance' | 'rating' | 'price-low' | 'price-high'
 }
 
 export const defaultFilterState: FilterState = {
@@ -25,5 +25,5 @@ export const defaultFilterState: FilterState = {
   selectedNeighborhoods: [],
   selectedFeatures: [],
   openNow: false,
-  sortBy: 'relevance'
+  sortBy: 'ai-match'
 }

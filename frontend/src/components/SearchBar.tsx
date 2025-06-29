@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { searchSuggestions } from '../data/mockRestaurants'
 import { cn } from '../lib/utils'
+import { apiService } from '../lib/api'
 
 interface SearchBarProps {
   onSearch: (query: string) => void
@@ -9,9 +10,34 @@ interface SearchBarProps {
   initialQuery?: string
 }
 
+// Cape Town specific search suggestions
+const capeToWnSearchSuggestions = [
+  'Beachfront dining with ocean views',
+  'Romantic spots for date night',
+  'Open late for dinner after 9pm',
+  'Affordable meals under R300',
+  'Family-friendly restaurants',
+  'Best seafood in Cape Town',
+  'Fine dining for special occasions',
+  'Traditional African cuisine',
+  'Wine estates with food',
+  'Vegetarian-friendly options',
+  'Japanese sushi restaurants',
+  'Casual beach bars and cafes',
+  'Garden restaurants with views',
+  'Fresh fish at the harbour',
+  'Rooftop dining with city views',
+  'Pet-friendly restaurants',
+  'Best brunch spots',
+  'Halal restaurants',
+  'Steakhouses and grills',
+  'Craft beer and pub food'
+]
+
 export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarProps) {
   const [query, setQuery] = useState(initialQuery)
   const [showSuggestions, setShowSuggestions] = useState(initialQuery.length === 0)
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([])
 
   useEffect(() => {
     setQuery(initialQuery)
@@ -20,7 +46,24 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
 
   useEffect(() => {
     setShowSuggestions(query.length === 0)
+    
+    // Try to fetch dynamic suggestions if query has content
+    if (query.length > 2) {
+      fetchDynamicSuggestions(query)
+    }
   }, [query])
+
+  const fetchDynamicSuggestions = async (searchQuery: string) => {
+    try {
+      const response = await apiService.getSearchSuggestions(searchQuery)
+      if (response.suggestions && response.suggestions.length > 0) {
+        setDynamicSuggestions(response.suggestions.slice(0, 6))
+      }
+    } catch (error) {
+      // Silently fail - we'll use static suggestions
+      console.log('Could not fetch dynamic suggestions:', error)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,7 +82,13 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   const clearSearch = () => {
     setQuery('')
     setShowSuggestions(true)
+    setDynamicSuggestions([])
   }
+
+  // Combine dynamic and static suggestions
+  const suggestionsToShow = dynamicSuggestions.length > 0 
+    ? [...dynamicSuggestions, ...capeToWnSearchSuggestions.slice(0, 12 - dynamicSuggestions.length)]
+    : capeToWnSearchSuggestions.slice(0, 12)
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -70,22 +119,32 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         </div>
       </form>
 
-      {/* Suggestions */}
+      {/* Enhanced Suggestions */}
       {showSuggestions && (
         <div className="mt-6 animate-fade-in">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
             Try these popular searches:
           </p>
           <div className="flex flex-wrap gap-2">
-            {searchSuggestions.map((suggestion, index) => (
+            {suggestionsToShow.map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+                className={cn(
+                  "px-4 py-2 rounded-full text-sm transition-colors",
+                  index < (dynamicSuggestions.length || 0) 
+                    ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800/40"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-300"
+                )}
               >
                 {suggestion}
               </button>
             ))}
+          </div>
+          
+          {/* Cape Town Context */}
+          <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
+            🏔️ Searching across 300+ Cape Town restaurants
           </div>
         </div>
       )}

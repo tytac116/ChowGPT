@@ -80,7 +80,7 @@ export function FilterPanel({
     filters.selectedNeighborhoods.length > 0 ||
     filters.selectedFeatures.length > 0 ||
     filters.openNow ||
-    filters.sortBy !== 'relevance'
+    filters.sortBy !== 'ai-match'
 
   return (
     <>
@@ -89,13 +89,13 @@ export function FilterPanel({
         <Button
           onClick={onToggle}
           variant="outline"
-          className="w-full justify-between"
+          className="w-full justify-between transform hover:scale-105 active:scale-95"
         >
           <div className="flex items-center space-x-2">
             <Filter className="h-4 w-4" />
             <span>Filters</span>
             {hasActiveFilters && (
-              <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full">
+              <span className="bg-primary-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
                 Active
               </span>
             )}
@@ -106,9 +106,9 @@ export function FilterPanel({
 
       {/* Filter Panel */}
       <div className={cn(
-        'bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300',
+        'bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 ease-out',
         'lg:block lg:sticky lg:top-4',
-        isOpen ? 'block' : 'hidden lg:block'
+        isOpen ? 'block animate-slide-in-bottom' : 'hidden lg:block'
       )}>
         <div className="p-6">
           {/* Header */}
@@ -125,14 +125,14 @@ export function FilterPanel({
                   onClick={clearAllFilters}
                   variant="ghost"
                   size="sm"
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transform hover:scale-105"
                 >
                   Clear All
                 </Button>
               )}
               <button
                 onClick={onToggle}
-                className="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="lg:hidden p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 transform hover:scale-110"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -150,25 +150,26 @@ export function FilterPanel({
                 ...filters, 
                 sortBy: e.target.value as FilterState['sortBy'] 
               })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
             >
+              <option value="ai-match">Best AI Match</option>
               <option value="relevance">Most Relevant</option>
               <option value="rating">Highest Rated</option>
-              <option value="price">Price: Low to High</option>
-              <option value="distance">Nearest First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
             </select>
           </div>
 
           {/* Open Now Toggle */}
           <div className="mb-6">
-            <label className="flex items-center space-x-3 cursor-pointer">
+            <label className="flex items-center space-x-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={filters.openNow}
                 onChange={(e) => onFiltersChange({ ...filters, openNow: e.target.checked })}
-                className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
               />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                 Open Now
               </span>
             </label>
@@ -180,16 +181,16 @@ export function FilterPanel({
             isExpanded={expandedSections.categories}
             onToggle={() => toggleSection('categories')}
           >
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
               {filterOptions.categories.map((category) => (
-                <label key={category} className="flex items-center space-x-3 cursor-pointer">
+                <label key={category} className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={filters.selectedCategories.includes(category)}
                     onChange={() => handleCategoryChange(category)}
-                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                     {category}
                   </span>
                 </label>
@@ -205,14 +206,14 @@ export function FilterPanel({
           >
             <div className="space-y-2">
               {filterOptions.priceRanges.map((priceRange) => (
-                <label key={priceRange} className="flex items-center space-x-3 cursor-pointer">
+                <label key={priceRange} className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={filters.selectedPriceRanges.includes(priceRange)}
                     onChange={() => handlePriceRangeChange(priceRange)}
-                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                     {priceRange}
                   </span>
                 </label>
@@ -228,31 +229,31 @@ export function FilterPanel({
           >
             <div className="space-y-2">
               {filterOptions.ratings.map((rating) => (
-                <label key={rating} className="flex items-center space-x-3 cursor-pointer">
+                <label key={rating} className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="radio"
                     name="rating"
                     checked={filters.minRating === rating}
                     onChange={() => onFiltersChange({ ...filters, minRating: rating })}
-                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
                   />
                   <div className="flex items-center space-x-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current transition-transform duration-200 group-hover:scale-110" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                       {rating}+ stars
                     </span>
                   </div>
                 </label>
               ))}
-              <label className="flex items-center space-x-3 cursor-pointer">
+              <label className="flex items-center space-x-3 cursor-pointer group">
                 <input
                   type="radio"
                   name="rating"
                   checked={filters.minRating === 0}
                   onChange={() => onFiltersChange({ ...filters, minRating: 0 })}
-                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                   Any rating
                 </span>
               </label>
@@ -265,16 +266,16 @@ export function FilterPanel({
             isExpanded={expandedSections.location}
             onToggle={() => toggleSection('location')}
           >
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
               {filterOptions.neighborhoods.map((neighborhood) => (
-                <label key={neighborhood} className="flex items-center space-x-3 cursor-pointer">
+                <label key={neighborhood} className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={filters.selectedNeighborhoods.includes(neighborhood)}
                     onChange={() => handleNeighborhoodChange(neighborhood)}
-                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                     {neighborhood}
                   </span>
                 </label>
@@ -288,16 +289,16 @@ export function FilterPanel({
             isExpanded={expandedSections.features}
             onToggle={() => toggleSection('features')}
           >
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
               {filterOptions.features.map((feature) => (
-                <label key={feature} className="flex items-center space-x-3 cursor-pointer">
+                <label key={feature} className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={filters.selectedFeatures.includes(feature)}
                     onChange={() => handleFeatureChange(feature)}
-                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 transition-all duration-200"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                     {feature}
                   </span>
                 </label>
@@ -310,7 +311,7 @@ export function FilterPanel({
             <Button
               onClick={onApplyFilters}
               variant="primary"
-              className="w-full"
+              className="w-full transform hover:scale-105 active:scale-95"
             >
               Apply Filters ({resultsCount} results)
             </Button>
@@ -333,19 +334,21 @@ function FilterSection({ title, isExpanded, onToggle, children }: FilterSectionP
     <div className="mb-6">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full text-left mb-3 focus:outline-none"
+        className="flex items-center justify-between w-full text-left mb-3 focus:outline-none group"
       >
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+        <h4 className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
           {title}
         </h4>
-        {isExpanded ? (
-          <ChevronUp className="h-4 w-4 text-gray-500" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-gray-500" />
-        )}
+        <div className="transition-transform duration-200 group-hover:scale-110">
+          {isExpanded ? (
+            <ChevronUp className="h-4 w-4 text-gray-500" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-gray-500" />
+          )}
+        </div>
       </button>
       {isExpanded && (
-        <div className="animate-fade-in">
+        <div className="animate-slide-in-bottom">
           {children}
         </div>
       )}

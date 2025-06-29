@@ -58,6 +58,31 @@ class SupabaseService {
     }
   }
 
+  // BATCH: Get multiple restaurants by IDs - MUCH FASTER
+  async getRestaurantsByIds(placeIds: string[]): Promise<RestaurantResponse[]> {
+    try {
+      if (placeIds.length === 0) return [];
+
+      const { data, error } = await this.client
+        .from('restaurants')
+        .select('*')
+        .in('placeId', placeIds);
+
+      if (error) {
+        console.error('Error fetching restaurants batch:', error);
+        return [];
+      }
+
+      const restaurants = (data as Restaurant[])?.map(raw => this.transformRestaurant(raw)) || [];
+      console.log(`   ✅ Batch fetched ${restaurants.length}/${placeIds.length} restaurants`);
+      
+      return restaurants;
+    } catch (error) {
+      console.error('Error in getRestaurantsByIds:', error);
+      return [];
+    }
+  }
+
   // Get restaurants with basic search and filtering
   async getRestaurants(
     query?: string, 
@@ -150,6 +175,49 @@ class SupabaseService {
     } catch (error) {
       console.error('Error in getReviewsForRestaurant:', error);
       return { reviews: [], total: 0 };
+    }
+  }
+
+  // BATCH: Get reviews for multiple restaurants at once - MUCH FASTER
+  async getReviewsForRestaurants(
+    placeIds: string[], 
+    limit = 7
+  ): Promise<Map<string, ReviewResponse[]>> {
+    try {
+      if (placeIds.length === 0) return new Map();
+
+      // Get reviews for all restaurants in one query
+      const { data, error } = await this.client
+        .from('restaurant_reviews')
+        .select('*')
+        .in('place_id', placeIds)
+        .order('publishedAtDate', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching reviews batch:', error);
+        return new Map();
+      }
+
+      // Group reviews by restaurant
+      const reviewsByRestaurant = new Map<string, ReviewResponse[]>();
+      
+      (data as Review[])?.forEach(review => {
+        const placeId = review.place_id;
+        if (!reviewsByRestaurant.has(placeId)) {
+          reviewsByRestaurant.set(placeId, []);
+        }
+        
+        const reviews = reviewsByRestaurant.get(placeId)!;
+        if (reviews.length < limit) {
+          reviews.push(this.transformReview(review));
+        }
+      });
+
+      console.log(`   ✅ Batch fetched reviews for ${reviewsByRestaurant.size}/${placeIds.length} restaurants`);
+      return reviewsByRestaurant;
+    } catch (error) {
+      console.error('Error in getReviewsForRestaurants:', error);
+      return new Map();
     }
   }
 
@@ -474,8 +542,10 @@ class SupabaseService {
 
   // Transform raw review data to API response format
   private transformReview(raw: Review): ReviewResponse {
-    const parseBoolean = (value: string): boolean => {
-      return value?.toLowerCase() === 'true';
+    const parseBoolean = (value: string | boolean | null | undefined): boolean => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') return value.toLowerCase() === 'true';
+      return false;
     };
 
     return {
@@ -495,8 +565,10 @@ class SupabaseService {
 
   // Transform raw restaurant data to enhanced card format with proper parsing
   private transformRestaurantToCard(raw: Restaurant, searchQuery?: string, position = 0): RestaurantCardResponse {
-    const parseBoolean = (value: string): boolean => {
-      return value?.toLowerCase() === 'true';
+    const parseBoolean = (value: string | boolean | null | undefined): boolean => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') return value.toLowerCase() === 'true';
+      return false;
     };
 
     const extractReviewTags = (category: string, description: string, categories: string[]): string[] => {
