@@ -4,7 +4,7 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { PhotoGallery } from './PhotoGallery'
 import { Restaurant, AIMatchExplanation } from '../types/restaurant'
-import { apiService, AIExplanationResponse } from '@/lib/api'
+import { apiService, AIExplanationResponse } from '@/lib/api.ts'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { useAppState } from '../contexts/AppStateContext'
