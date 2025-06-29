@@ -1,22 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Sparkles, ChefHat } from 'lucide-react'
 import { Button } from './ui/Button'
-import { useAppState } from '../contexts/AppStateContext'
-import { apiService, ChatMessage } from '../lib/api'
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { apiService } from '../lib/api'
 
-// Direct cn implementation to avoid import issues
-const cn = (...inputs: ClassValue[]) => {
-  return twMerge(clsx(inputs))
-}
-
-interface Message {
+// Simple, clean message interface
+interface ChatMessage {
   id: string
-  type: 'user' | 'assistant'
+  role: 'user' | 'assistant'
   content: string
   timestamp: Date
-  isTyping?: boolean
+  isStreaming?: boolean
 }
 
 const suggestedQuestions = [
@@ -30,150 +23,157 @@ const suggestedQuestions = [
   "Recommend wine estates with good food near Cape Town"
 ]
 
-// Generate a unique session ID for this browser session
+// Generate session ID once
 const generateSessionId = () => {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
 
 export function ChatInterface() {
-  const { chatMessages, setChatMessages } = useAppState()
+  // Simple state management
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputValue, setInputValue] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const [sessionId] = useState(() => generateSessionId())
+  const [isLoading, setIsLoading] = useState(false)
+  const [sessionId] = useState(generateSessionId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
+  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   useEffect(() => {
     scrollToBottom()
-  }, [chatMessages])
+  }, [messages])
 
-  // Load chat history on component mount
-  useEffect(() => {
-    const loadChatHistory = async () => {
-      try {
-        const history = await apiService.getChatHistory(sessionId)
-        if (history.messages.length > 0) {
-          const formattedMessages = history.messages.map(msg => ({
-            id: `${msg.timestamp}_${msg.role}`,
-            type: msg.role,
-            content: msg.content,
-            timestamp: new Date(msg.timestamp)
-          }))
-          setChatMessages(formattedMessages)
-        }
-      } catch (error) {
-        console.error('Failed to load chat history:', error)
-        // Don't show error to user, just start with empty chat
-      }
-    }
+  // Simple message sending function
+  const sendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return
 
-    loadChatHistory()
-  }, [sessionId, setChatMessages])
-
-  // Convert stored messages to proper Date objects
-  const messages = chatMessages.map(msg => ({
-    ...msg,
-    timestamp: new Date(msg.timestamp)
-  }))
-
-  const handleSend = async () => {
-    if (!inputValue.trim() || isTyping) return
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputValue.trim(),
-      timestamp: new Date()
-    }
-
-    setChatMessages(prev => [...prev, userMessage])
+    const userMessage = inputValue.trim()
     setInputValue('')
-    setIsTyping(true)
+    setIsLoading(true)
 
-    // Create a placeholder assistant message that will be updated with streaming content
-    const assistantMessageId = (Date.now() + 1).toString()
-    const assistantMessage: Message = {
-      id: assistantMessageId,
-      type: 'assistant',
-      content: '',
+    // Add user message immediately - this should ALWAYS work
+    const userMsg: ChatMessage = {
+      id: `user_${Date.now()}`,
+      role: 'user',
+      content: userMessage,
       timestamp: new Date()
     }
+    
+    console.log('Adding user message:', userMsg)
+    setMessages(prev => {
+      const newMessages = [...prev, userMsg]
+      console.log('Updated messages:', newMessages)
+      return newMessages
+    })
 
-    setChatMessages(prev => [...prev, assistantMessage])
+    // Create placeholder assistant message for streaming
+    const assistantMsgId = `assistant_${Date.now()}`
+    const assistantMsg: ChatMessage = {
+      id: assistantMsgId,
+      role: 'assistant',
+      content: '', // Start empty for streaming
+      timestamp: new Date(),
+      isStreaming: true
+    }
+
+    // Add placeholder immediately
+    setMessages(prev => [...prev, assistantMsg])
 
     try {
-      // Use streaming chat
+      // Try streaming first
+      let streamingContent = ''
+      let streamingWorked = false
+      
       await apiService.sendStreamingChatMessage(
-        userMessage.content,
+        userMessage,
         sessionId,
         (token: string) => {
-          // Update the assistant message with new tokens as they arrive
-          setChatMessages(prev => 
+          // Token received - streaming is working
+          streamingWorked = true
+          streamingContent += token
+          
+          // Update the streaming message
+          setMessages(prev => 
             prev.map(msg => 
-              msg.id === assistantMessageId 
-                ? { ...msg, content: msg.content + token }
+              msg.id === assistantMsgId 
+                ? { ...msg, content: streamingContent, isStreaming: true }
                 : msg
             )
           )
         },
-        (fullResponse: string) => {
-          // Ensure the final message is complete
-          setChatMessages(prev => 
+        (finalResponse: string) => {
+          // Streaming complete
+          setMessages(prev => 
             prev.map(msg => 
-              msg.id === assistantMessageId 
-                ? { ...msg, content: fullResponse, timestamp: new Date() }
+              msg.id === assistantMsgId 
+                ? { ...msg, content: finalResponse, isStreaming: false }
                 : msg
             )
           )
-          setIsTyping(false)
+          setIsLoading(false)
+          console.log('✅ Streaming completed successfully')
         },
         (error: string) => {
-          // Handle streaming errors
-          console.error('Streaming error:', error)
-          
-          const errorMessage: Message = {
-            id: assistantMessageId,
-            type: 'assistant',
-            content: "I'm sorry, I encountered an error processing your request. Please try again.",
-            timestamp: new Date()
-          }
-
-          setChatMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessageId ? errorMessage : msg
-            )
-          )
-          setIsTyping(false)
+          console.error('❌ Streaming error:', error)
+          // Fallback to regular API call
+          fallbackToRegularChat()
         }
       )
-    } catch (error) {
-      console.error('Failed to send streaming chat message:', error)
       
-      // Show error message to user
-      const errorMessage: Message = {
-        id: assistantMessageId,
-        type: 'assistant',
-        content: "I'm sorry, I encountered an error processing your request. Please try again.",
-        timestamp: new Date()
+      // If no tokens were received, fallback
+      if (!streamingWorked) {
+        console.log('🔄 No streaming tokens received, falling back to regular chat')
+        fallbackToRegularChat()
       }
+      
+    } catch (error) {
+      console.error('❌ Chat error:', error)
+      fallbackToRegularChat()
+    }
 
-      setChatMessages(prev => 
-        prev.map(msg => 
-          msg.id === assistantMessageId ? errorMessage : msg
+    // Fallback function for when streaming fails
+    async function fallbackToRegularChat() {
+      try {
+        console.log('🔄 Using fallback regular chat API')
+        const response = await apiService.sendChatMessage(userMessage, sessionId)
+        
+        // Update the placeholder with regular response
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === assistantMsgId 
+              ? { ...msg, content: response.response, isStreaming: false }
+              : msg
+          )
         )
-      )
-      setIsTyping(false)
+        
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError)
+        
+        // Update with error message
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === assistantMsgId 
+              ? { 
+                  ...msg, 
+                  content: "I'm sorry, I encountered an error. Please try again.", 
+                  isStreaming: false 
+                }
+              : msg
+          )
+        )
+      } finally {
+        setIsLoading(false)
+      }
     }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      handleSend()
+      sendMessage()
     }
   }
 
@@ -183,18 +183,15 @@ export function ChatInterface() {
   }
 
   const formatMessage = (content: string) => {
-    // Enhanced formatting for restaurant recommendations
-    let formatted = content
-      // Bold text
+    // Simple formatting for links and styling
+    return content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Make Google Maps links clickable
-      .replace(/(https:\/\/www\.google\.com\/maps\/search\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">Google Maps</a>')
-      // Make website links clickable
-      .replace(/(https:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">Visit Website</a>')
-      // Convert line breaks to <br>
+      .replace(/(https:\/\/www\.google\.com\/maps\/search\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">🗺️ Google Maps</a>')
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">🌐 $1</a>')
+      .replace(/(https:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline font-medium">🌐 Visit Website</a>')
+      .replace(/(\d+(?:\.\d+)?\/5\.0?\s*\(\d+\s*reviews?\))/g, '<span class="text-yellow-600 dark:text-yellow-400 font-medium">⭐ $1</span>')
+      .replace(/(R\s*\d+[\-–]\d+)/g, '<span class="text-green-600 dark:text-green-400 font-medium">💰 $1</span>')
       .replace(/\n/g, '<br>')
-
-    return formatted
   }
 
   return (
@@ -221,19 +218,17 @@ export function ChatInterface() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={cn(
-              "flex items-start space-x-3 max-w-4xl",
-              message.type === 'user' ? 'ml-auto flex-row-reverse space-x-reverse' : 'mr-auto'
-            )}
+            className={`flex items-start space-x-3 max-w-4xl ${
+              message.role === 'user' ? 'ml-auto flex-row-reverse space-x-reverse' : 'mr-auto'
+            }`}
           >
             {/* Avatar */}
-            <div className={cn(
-              "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center",
-              message.type === 'user' 
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+              message.role === 'user' 
                 ? 'bg-primary-600 text-white' 
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-            )}>
-              {message.type === 'user' ? (
+            }`}>
+              {message.role === 'user' ? (
                 <User className="h-4 w-4" />
               ) : (
                 <Bot className="h-4 w-4" />
@@ -241,47 +236,57 @@ export function ChatInterface() {
             </div>
 
             {/* Message Content */}
-            <div className={cn(
-              "flex-1 px-4 py-3 rounded-2xl max-w-3xl",
-              message.type === 'user'
+            <div className={`flex-1 px-4 py-3 rounded-2xl max-w-3xl ${
+              message.role === 'user'
                 ? 'bg-primary-600 text-white'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
-            )}>
-              <div 
-                className="text-sm leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: formatMessage(message.content) }}
-              />
-              <div className={cn(
-                "text-xs mt-2 opacity-70",
-                message.type === 'user' ? 'text-primary-100' : 'text-gray-500 dark:text-gray-400'
-              )}>
+            }`}>
+              <div className="flex items-start">
+                <div 
+                  className="text-sm leading-relaxed flex-1"
+                  dangerouslySetInnerHTML={{ __html: formatMessage(message.content || '•••') }}
+                />
+                {/* Animated typing cursor for streaming */}
+                {message.isStreaming && message.role === 'assistant' && (
+                  <span className="inline-block w-0.5 h-4 bg-primary-500 ml-2 animate-pulse"></span>
+                )}
+              </div>
+              <div className={`text-xs mt-2 opacity-70 ${
+                message.role === 'user' ? 'text-primary-100' : 'text-gray-500 dark:text-gray-400'
+              }`}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {message.isStreaming && message.role === 'assistant' && (
+                  <span className="ml-2 text-green-500 flex items-center">
+                    <span className="w-1 h-1 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                    streaming
+                  </span>
+                )}
               </div>
             </div>
           </div>
         ))}
 
-        {/* Typing Indicator */}
-        {isTyping && (
+        {/* Loading indicator */}
+        {isLoading && (
           <div className="flex items-start space-x-3 max-w-4xl mr-auto">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+              <Bot className="h-4 w-4" />
             </div>
-            <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl">
+            <div className="flex-1 px-4 py-3 rounded-2xl max-w-3xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white">
               <div className="flex items-center space-x-2">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400">AI is thinking...</span>
+                <span className="text-sm text-gray-500">AI is thinking...</span>
               </div>
             </div>
           </div>
         )}
 
         {/* Suggested Questions (only show when no messages) */}
-        {messages.length === 0 && !isTyping && (
+        {messages.length === 0 && !isLoading && (
           <div className="max-w-4xl mr-auto">
             <div className="mb-4">
               <div className="flex items-center space-x-2 mb-3">
@@ -318,7 +323,7 @@ export function ChatInterface() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me about restaurants in Cape Town..."
+                placeholder={isLoading ? "AI is responding..." : "Ask me about restaurants in Cape Town..."}
                 className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none max-h-32"
                 rows={1}
                 style={{
@@ -330,13 +335,15 @@ export function ChatInterface() {
                   target.style.height = 'auto'
                   target.style.height = Math.min(target.scrollHeight, 128) + 'px'
                 }}
-                disabled={isTyping}
+                disabled={isLoading}
               />
             </div>
             <Button
-              onClick={handleSend}
-              disabled={!inputValue.trim() || isTyping}
-              className="p-3 rounded-2xl"
+              onClick={sendMessage}
+              disabled={!inputValue.trim() || isLoading}
+              className={`p-3 rounded-2xl transition-all ${
+                isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+              }`}
               variant="primary"
             >
               <Send className="h-4 w-4" />
@@ -345,7 +352,7 @@ export function ChatInterface() {
           
           {/* Helper Text */}
           <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
-            Press Enter to send, Shift + Enter for new line
+            {isLoading ? "Please wait while AI responds..." : "Press Enter to send, Shift + Enter for new line"}
           </div>
         </div>
       </div>

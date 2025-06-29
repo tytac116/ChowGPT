@@ -458,16 +458,6 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                         </ul>
                       </div>
                     )}
-
-                    {/* Debug info in development */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <div className="mt-4 p-2 bg-gray-100 dark:bg-gray-800 rounded text-xs">
-                        <details>
-                          <summary>Debug Info</summary>
-                          <pre className="mt-2 text-xs">{JSON.stringify(aiExplanation, null, 2)}</pre>
-                        </details>
-                      </div>
-                    )}
                   </>
                 )}
 
@@ -539,18 +529,6 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                             </li>
                           )}
                         </ul>
-                      </div>
-                    )}
-
-                    {/* Debug info for fallback in development */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <div className="mt-4 p-2 bg-red-100 dark:bg-red-900/20 rounded text-xs">
-                        <p className="text-red-800 dark:text-red-200">
-                          ⚠️ Using fallback - AI explanation failed or not available
-                        </p>
-                        <p className="text-xs mt-1">
-                          Restaurant ID: {restaurant.id} | Search Query: "{searchQuery}" | Loading: {aiExplanationLoading.toString()}
-                        </p>
                       </div>
                     )}
                   </>

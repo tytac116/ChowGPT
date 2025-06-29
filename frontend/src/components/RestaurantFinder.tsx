@@ -323,24 +323,32 @@ export function RestaurantFinder() {
       )
     }
 
-    // Apply price range filter - Updated for South African Rands
+    // Apply price range filter - Robust price matching
     if (filters.selectedPriceRanges.length > 0) {
       filtered = filtered.filter(restaurant => {
-        const price = restaurant.price
+        const price = restaurant.price || ''
+        // Extract price numbers for more accurate matching
+        const priceNumbers = price.match(/\d+/g)?.map(Number) || []
+        const avgPrice = priceNumbers.length > 0 ? priceNumbers.reduce((a, b) => a + b, 0) / priceNumbers.length : 0
+        
         return filters.selectedPriceRanges.some(range => {
+          // Direct string matching first (for exact price ranges)
+          if (price.includes(range)) return true
+          
+          // Then check by price value ranges
           switch (range) {
             case 'Under R150':
-              return price.includes('R100') || price.includes('R120') || price.includes('R80') || price.includes('R50')
+              return avgPrice < 150
             case 'R150-300':
-              return price.includes('R150') || price.includes('R180') || price.includes('R200') || price.includes('R300')
+              return avgPrice >= 150 && avgPrice <= 300
             case 'R300-500':
-              return price.includes('R300') || price.includes('R400') || price.includes('R450') || price.includes('R500')
+              return avgPrice >= 300 && avgPrice <= 500
             case 'R500-800':
-              return price.includes('R500') || price.includes('R600') || price.includes('R700') || price.includes('R800')
+              return avgPrice >= 500 && avgPrice <= 800
             case 'R800+':
-              return price.includes('R800') || price.includes('R1000') || price.includes('R1200') || price.includes('R1500')
+              return avgPrice >= 800
             default:
-              return true
+              return price.includes(range) // Fallback to string matching
           }
         })
       })
@@ -348,7 +356,10 @@ export function RestaurantFinder() {
 
     // Apply rating filter
     if (filters.minRating > 0) {
-      filtered = filtered.filter(restaurant => restaurant.totalScore >= filters.minRating)
+      filtered = filtered.filter(restaurant => {
+        const rating = restaurant.totalScore || 0
+        return rating >= filters.minRating
+      })
     }
 
     // Apply neighborhood filter
@@ -412,7 +423,7 @@ export function RestaurantFinder() {
     }
 
     setFilteredRestaurants(filtered)
-    setIsFilterPanelOpen(false) // Close filter panel on mobile after applying
+    // Don't auto-close filter panel - let users apply multiple filters
   }
 
   const openRestaurantModal = (restaurant: Restaurant) => {
@@ -493,14 +504,15 @@ export function RestaurantFinder() {
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Filter Panel */}
           <div className="lg:col-span-1">
-            <FilterPanel
-              isOpen={isFilterPanelOpen}
-              onToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-              filters={filters}
-              onFiltersChange={setFilters}
-              onApplyFilters={applyFilters}
-              resultsCount={filteredRestaurants.length}
-            />
+                      <FilterPanel
+            isOpen={isFilterPanelOpen}
+            onToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+            filters={filters}
+            onFiltersChange={setFilters}
+            onApplyFilters={applyFilters}
+            resultsCount={filteredRestaurants.length}
+            restaurants={restaurants}
+          />
           </div>
 
           {/* Results Grid */}
