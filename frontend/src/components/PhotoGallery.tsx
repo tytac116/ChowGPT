@@ -16,12 +16,12 @@ interface PhotoGalleryProps {
   restaurantName: string
 }
 
-export function PhotoGallery({
-  images,
-  initialIndex,
-  isOpen,
-  onClose,
-  restaurantName
+export function PhotoGallery({ 
+  images, 
+  initialIndex, 
+  isOpen, 
+  onClose, 
+  restaurantName 
 }: PhotoGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [isVisible, setIsVisible] = useState(false)
@@ -102,10 +102,10 @@ export function PhotoGallery({
       onOpenChange={(open) => !open && handleClose()}
       className="p-0 max-w-none max-h-none w-full h-full bg-black/95"
     >
-      <div 
+    <div 
         className="relative w-full h-full flex items-center justify-center"
-        onClick={handleBackdropClick}
-      >
+      onClick={handleBackdropClick}
+    >
         {/* Close Button */}
         <div className="absolute top-4 right-4 z-50">
           <button
@@ -126,33 +126,33 @@ export function PhotoGallery({
             {currentIndex + 1} of {images.length} photos
           </div>
         </div>
-
-        {/* Navigation Arrows */}
-        {images.length > 1 && (
-          <>
-            <button
+          
+          {/* Navigation Arrows */}
+          {images.length > 1 && (
+            <>
+              <button
               onClick={(e) => {
                 e.stopPropagation()
                 goToPrevious()
               }}
               className="absolute left-4 top-1/2 transform -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-200 backdrop-blur-sm"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-
-            <button
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              
+              <button
               onClick={(e) => {
                 e.stopPropagation()
                 goToNext()
               }}
               className="absolute right-4 top-1/2 transform -translate-y-1/2 z-50 p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-200 backdrop-blur-sm"
-              aria-label="Next image"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </button>
-          </>
-        )}
+                aria-label="Next image"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            </>
+          )}
 
         {/* Main Image */}
         <div className="flex items-center justify-center h-full p-4 pt-20 pb-32">
@@ -167,10 +167,10 @@ export function PhotoGallery({
             draggable={false}
             onClick={(e) => e.stopPropagation()}
           />
-        </div>
+      </div>
 
         {/* Bottom Thumbnail Strip */}
-        {images.length > 1 && (
+      {images.length > 1 && (
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
             <div className="flex space-x-2 p-2 rounded-lg bg-black/50 backdrop-blur-sm max-w-2xl overflow-x-auto">
               {images.map((image, index) => (
@@ -182,7 +182,7 @@ export function PhotoGallery({
                   }}
                   className={cn(
                     "flex-shrink-0 w-12 h-12 rounded overflow-hidden border-2 transition-all duration-200",
-                    index === currentIndex 
+                    index === currentIndex
                       ? "border-white opacity-100" 
                       : "border-transparent opacity-60 hover:opacity-80"
                   )}
@@ -195,10 +195,10 @@ export function PhotoGallery({
                   />
                 </button>
               ))}
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
     </Modal>
   )
-} 
+}

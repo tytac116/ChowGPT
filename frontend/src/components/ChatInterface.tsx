@@ -61,7 +61,7 @@ export function ChatInterface() {
       content: userMessage,
       timestamp: new Date()
     }
-    
+
     console.log('Adding user message:', userMsg)
     setMessages(prev => {
       const newMessages = [...prev, userMsg]
@@ -242,10 +242,10 @@ export function ChatInterface() {
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
             }`}>
               <div className="flex items-start">
-                <div 
+              <div 
                   className="text-sm leading-relaxed flex-1"
                   dangerouslySetInnerHTML={{ __html: formatMessage(message.content || '•••') }}
-                />
+              />
                 {/* Animated typing cursor for streaming */}
                 {message.isStreaming && message.role === 'assistant' && (
                   <span className="inline-block w-0.5 h-4 bg-primary-500 ml-2 animate-pulse"></span>
@@ -274,10 +274,10 @@ export function ChatInterface() {
             </div>
             <div className="flex-1 px-4 py-3 rounded-2xl max-w-3xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white">
               <div className="flex items-center space-x-2">
-                <div className="flex space-x-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className="flex space-x-1">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
                 <span className="text-sm text-gray-500">AI is thinking...</span>
               </div>

@@ -259,13 +259,13 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
           <div className="flex flex-wrap gap-1 mb-2">
             {/* Use real categories instead of reviewsTags */}
             {(restaurant.categories || []).slice(0, 3).map((category, index) => (
-              <span
-                key={index}
+            <span
+              key={index}
                 className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs"
-              >
+            >
                 {category}
-              </span>
-            ))}
+            </span>
+          ))}
             {/* Show count if more categories exist */}
             {(restaurant.categories || []).length > 3 && (
               <span className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded text-xs">
@@ -276,8 +276,8 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
             {(!restaurant.categories || restaurant.categories.length === 0) && (
               <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs">
                 {restaurant.categoryName || 'Restaurant'}
-              </span>
-            )}
+            </span>
+          )}
           </div>
         </div>
 

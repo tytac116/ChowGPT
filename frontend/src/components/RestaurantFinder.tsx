@@ -504,15 +504,15 @@ export function RestaurantFinder() {
         <div className="grid lg:grid-cols-4 gap-8">
           {/* Filter Panel */}
           <div className="lg:col-span-1">
-                      <FilterPanel
-            isOpen={isFilterPanelOpen}
-            onToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
-            filters={filters}
-            onFiltersChange={setFilters}
-            onApplyFilters={applyFilters}
-            resultsCount={filteredRestaurants.length}
+            <FilterPanel
+              isOpen={isFilterPanelOpen}
+              onToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+              filters={filters}
+              onFiltersChange={setFilters}
+              onApplyFilters={applyFilters}
+              resultsCount={filteredRestaurants.length}
             restaurants={restaurants}
-          />
+            />
           </div>
 
           {/* Results Grid */}

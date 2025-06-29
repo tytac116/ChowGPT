@@ -234,13 +234,13 @@ export function FilterPanel({
 
           {/* Categories */}
           {filterOptions.categories.length > 0 && (
-            <FilterSection
+          <FilterSection
               title={`Categories (${filterOptions.categories.length})`}
-              isExpanded={expandedSections.categories}
-              onToggle={() => toggleSection('categories')}
-            >
+            isExpanded={expandedSections.categories}
+            onToggle={() => toggleSection('categories')}
+          >
               <div className="space-y-2">
-                {filterOptions.categories.map((category) => (
+              {filterOptions.categories.map((category) => (
                   <CheckboxFilter
                     key={category}
                     label={category}
@@ -248,20 +248,20 @@ export function FilterPanel({
                     onChange={(checked) => handleCategoryChange(category, checked)}
                     icon="🏷️"
                   />
-                ))}
-              </div>
-            </FilterSection>
+              ))}
+            </div>
+          </FilterSection>
           )}
 
           {/* Price Range */}
           {filterOptions.priceRanges.length > 0 && (
-            <FilterSection
+          <FilterSection
               title={`Price Range (${filterOptions.priceRanges.length})`}
-              isExpanded={expandedSections.price}
-              onToggle={() => toggleSection('price')}
-            >
-              <div className="space-y-2">
-                {filterOptions.priceRanges.map((priceRange) => (
+            isExpanded={expandedSections.price}
+            onToggle={() => toggleSection('price')}
+          >
+            <div className="space-y-2">
+              {filterOptions.priceRanges.map((priceRange) => (
                   <CheckboxFilter
                     key={priceRange}
                     label={priceRange}
@@ -269,9 +269,9 @@ export function FilterPanel({
                     onChange={(checked) => handlePriceRangeChange(priceRange, checked)}
                     icon="💰"
                   />
-                ))}
-              </div>
-            </FilterSection>
+              ))}
+            </div>
+          </FilterSection>
           )}
 
           {/* Minimum Rating */}
@@ -292,8 +292,8 @@ export function FilterPanel({
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
                     <Star className="h-4 w-4 text-yellow-400 mr-1" fill="currentColor" />
-                    {rating}+ stars
-                  </span>
+                      {rating}+ stars
+                    </span>
                 </label>
               ))}
               <label className="flex items-center space-x-3 cursor-pointer">
@@ -313,13 +313,13 @@ export function FilterPanel({
 
           {/* Neighborhood */}
           {filterOptions.neighborhoods.length > 0 && (
-            <FilterSection
+          <FilterSection
               title={`Neighborhood (${filterOptions.neighborhoods.length})`}
-              isExpanded={expandedSections.location}
-              onToggle={() => toggleSection('location')}
-            >
+            isExpanded={expandedSections.location}
+            onToggle={() => toggleSection('location')}
+          >
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {filterOptions.neighborhoods.map((neighborhood) => (
+              {filterOptions.neighborhoods.map((neighborhood) => (
                   <CheckboxFilter
                     key={neighborhood}
                     label={neighborhood}
@@ -327,20 +327,20 @@ export function FilterPanel({
                     onChange={(checked) => handleNeighborhoodChange(neighborhood, checked)}
                     icon="📍"
                   />
-                ))}
-              </div>
-            </FilterSection>
+              ))}
+            </div>
+          </FilterSection>
           )}
 
           {/* Features */}
           {filterOptions.features.length > 0 && (
-            <FilterSection
+          <FilterSection
               title={`Features (${filterOptions.features.length})`}
-              isExpanded={expandedSections.features}
-              onToggle={() => toggleSection('features')}
-            >
+            isExpanded={expandedSections.features}
+            onToggle={() => toggleSection('features')}
+          >
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {filterOptions.features.map((feature) => (
+              {filterOptions.features.map((feature) => (
                   <CheckboxFilter
                     key={feature}
                     label={feature}
@@ -348,9 +348,9 @@ export function FilterPanel({
                     onChange={(checked) => handleFeatureChange(feature, checked)}
                     icon="🔖"
                   />
-                ))}
-              </div>
-            </FilterSection>
+              ))}
+            </div>
+          </FilterSection>
           )}
         </div>
       </div>
@@ -401,11 +401,11 @@ function FilterSection({ title, isExpanded, onToggle, children }: FilterSectionP
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {title}
         </span>
-        {isExpanded ? (
+          {isExpanded ? (
           <ChevronUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-        ) : (
+          ) : (
           <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-        )}
+          )}
       </button>
       {isExpanded && (
         <div className="mt-3">
