@@ -18,7 +18,7 @@ app.use(helmet());
 // CORS configuration - Enhanced for development
 const corsOptions = {
   origin: isDevelopment 
-    ? ['http://localhost:3000', 'http://localhost:3000','http://localhost:5173', 'http://localhost:4173', 'https://chowgpt.onrender.com'] // Allow common dev ports
+    ? ['http://localhost:3000', 'http://localhost:3000','http://localhost:5173', 'http://localhost:4173', 'https://chowgpt.onrender.com', 'https://chowgpt.vercel.app/'] // Allow common dev ports
     : SERVER_CONFIG.corsOrigin,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
