@@ -8,7 +8,7 @@ import { SearchingAnimation } from './ui/TypeWriter'
 import { useAppState } from '../contexts/AppStateContext'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
-import { generateContextualMatchScore } from '../lib'
+import { generateContextualMatchScore } from '../lib/utils'
 import { apiService, transformBackendRestaurant, BackendSearchRequest } from '../lib/api'
 
 export function RestaurantFinder() {
@@ -59,7 +59,7 @@ export function RestaurantFinder() {
       
       console.log('✅ Search response:', searchResponse)
       setSearchMetadata(searchResponse.data.searchMetadata)
-
+    
       // Transform backend restaurants to frontend format
       const transformedRestaurants = searchResponse.data.restaurants.map(transformBackendRestaurant)
       
@@ -74,7 +74,7 @@ export function RestaurantFinder() {
       setRestaurants([])
       setFilteredRestaurants([])
     } finally {
-      setIsLoading(false)
+    setIsLoading(false)
     }
   }
 

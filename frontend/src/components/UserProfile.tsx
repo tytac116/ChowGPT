@@ -3,7 +3,7 @@ import { User, LogOut, Settings, Heart, MapPin, Calendar, ChevronDown, ChevronUp
 import { Button } from './ui/Button'
 import { Modal } from './ui/Modal'
 import { mockUser } from '../types/user'
-import { cn } from '../lib'
+import { cn } from '../lib/utils'
 
 interface UserProfileProps {
   isOpen: boolean

@@ -4,7 +4,8 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { PhotoGallery } from './PhotoGallery'
 import { Restaurant, AIMatchExplanation } from '../types/restaurant'
-import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel, cn } from '../lib'
+import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel } from '../lib/utils'
+import { cn } from '../lib/utils'
 import { useAppState } from '../contexts/AppStateContext'
 
 interface RestaurantModalProps {
@@ -244,12 +245,12 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                 </p>
                 
                 {/* Fake Match Reasons - Keep as requested */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    What matches your search:
-                  </h4>
-                  <ul className="space-y-1">
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium text-green-800 dark:text-green-200 mb-2 flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      What matches your search:
+                    </h4>
+                    <ul className="space-y-1">
                     {matchScore >= 80 && (
                       <>
                         <li className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
@@ -284,8 +285,8 @@ export function RestaurantModal({ restaurant, isOpen, onClose }: RestaurantModal
                         Some relevant features
                       </li>
                     )}
-                  </ul>
-                </div>
+                    </ul>
+                  </div>
 
                 {/* Fake Concerns - Keep as requested */}
                 {matchScore < 90 && (
