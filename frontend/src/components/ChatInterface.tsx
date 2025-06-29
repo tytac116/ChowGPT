@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Sparkles, ChefHat } from 'lucide-react'
 import { Button } from './ui/Button'
-import { apiService } from '../lib/api'
+import { apiService } from '@/lib/api'
 
 // Simple, clean message interface
 interface ChatMessage {
