@@ -8,6 +8,7 @@ import { SearchingAnimation } from './ui/TypeWriter'
 import { useAppState } from '../contexts/AppStateContext'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
+
 // Direct utility implementation to avoid import issues
 const predefinedMatchScores: Record<string, number> = {
   '1': 97, '2': 73, '3': 85, '4': 94, '5': 68, '6': 81, '7': 92, '8': 42, '9': 89, '10': 76, '11': 35, '12': 58,
@@ -55,7 +56,197 @@ const generateContextualMatchScore = (restaurantId: string, searchQuery?: string
   
   return baseScore
 }
-import { apiService, transformBackendRestaurant, BackendSearchRequest } from '../lib/api'
+
+// Direct API implementation to avoid import issues
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3001/api'
+  }
+  
+  return '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
+interface BackendSearchRequest {
+  query: string
+  filters?: {
+    cuisine?: string[]
+    priceRange?: {
+      min?: number
+      max?: number
+    }
+    location?: string
+    rating?: number
+    features?: string[]
+  }
+  limit?: number
+}
+
+interface BackendRestaurant {
+  placeId: string
+  name: string
+  cuisine: string[]
+  location: string | { lat: number; lng: number }
+  description?: string
+  rating?: number
+  priceLevel?: string
+  features: string[]
+  aiMatchScore: number
+  vectorScore: number
+  keywordScore: number
+  llmScore: number
+  llmReasoning: string
+  reviewSummary: string
+  operatingHours?: string
+  parkingInfo?: string
+  reviews?: any[]
+  phone?: string
+  website?: string
+  address?: string
+  neighborhood?: string
+  categories?: string[]
+  totalScore?: number
+  reviewsCount?: number
+  imageUrls?: string[]
+  images?: string[]
+  openingHours?: any[]
+}
+
+class ApiService {
+  async searchRestaurants(request: BackendSearchRequest): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/search/restaurants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async getRestaurantById(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/restaurants/${id}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch restaurant: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async getSearchSuggestions(query: string): Promise<{ suggestions: string[] }> {
+    const response = await fetch(`${API_BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch suggestions: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+}
+
+const apiService = new ApiService()
+
+function convertPriceToRands(priceLevel?: string): string {
+  if (!priceLevel) return 'R150-300'
+  
+  switch (priceLevel) {
+    case '$': return 'R100-200'
+    case '$$': return 'R200-400'
+    case '$$$': return 'R400-800'
+    case '$$$$': return 'R800-1500'
+    default: return priceLevel.includes('R') ? priceLevel : 'R150-300'
+  }
+}
+
+function extractLocationString(location: string | { lat: number; lng: number }): string {
+  if (typeof location === 'string') return location
+  if (location && typeof location === 'object') return 'Cape Town'
+  return 'Cape Town'
+}
+
+function getDefaultImages(): string[] {
+  return [
+    'https://images.pexels.com/photos/1267320/pexels-photo-1267320.jpeg',
+    'https://images.pexels.com/photos/2788792/pexels-photo-2788792.jpeg',
+    'https://images.pexels.com/photos/1581384/pexels-photo-1581384.jpeg'
+  ]
+}
+
+function transformOpeningHours(openingHours?: any[]): any {
+  if (!openingHours || !Array.isArray(openingHours)) {
+    return {
+      monday: '09:00 - 22:00',
+      tuesday: '09:00 - 22:00', 
+      wednesday: '09:00 - 22:00',
+      thursday: '09:00 - 22:00',
+      friday: '09:00 - 23:00',
+      saturday: '09:00 - 23:00',
+      sunday: '10:00 - 21:00'
+    }
+  }
+
+  const hours: any = {}
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+  
+  days.forEach((day, index) => {
+    const dayData = openingHours.find(h => h.day?.toLowerCase() === day)
+    hours[day] = dayData?.hours || '09:00 - 22:00'
+  })
+
+  return hours
+}
+
+function transformReviews(reviews: any[]): any[] {
+  return reviews.slice(0, 5).map((review, index) => ({
+    id: review.reviewId || `review-${index}`,
+    author: review.reviewerName || review.author || 'Anonymous',
+    rating: review.rating || 4,
+    text: review.text || review.review || 'Great experience!',
+    date: review.publishedAtDate || review.date || new Date().toISOString().split('T')[0],
+    helpful: review.helpful || Math.floor(Math.random() * 20)
+  }))
+}
+
+function transformBackendRestaurant(backendRestaurant: BackendRestaurant): any {
+  return {
+    id: backendRestaurant.placeId,
+    title: backendRestaurant.name,
+    categoryName: Array.isArray(backendRestaurant.cuisine) ? backendRestaurant.cuisine[0] : backendRestaurant.cuisine,
+    categories: Array.isArray(backendRestaurant.cuisine) ? backendRestaurant.cuisine : [backendRestaurant.cuisine],
+    totalScore: backendRestaurant.rating || backendRestaurant.aiMatchScore / 20,
+    reviewsCount: backendRestaurant.reviewsCount || (backendRestaurant.reviews?.length || 0),
+    price: convertPriceToRands(backendRestaurant.priceLevel),
+    address: backendRestaurant.address || '',
+    neighborhood: backendRestaurant.neighborhood || extractLocationString(backendRestaurant.location),
+    reviewsTags: backendRestaurant.features || [],
+    imagesCount: backendRestaurant.images?.length || backendRestaurant.imageUrls?.length || 3,
+    imageUrls: backendRestaurant.images || backendRestaurant.imageUrls || getDefaultImages(),
+    phone: backendRestaurant.phone,
+    website: backendRestaurant.website,
+    openingHours: transformOpeningHours(backendRestaurant.openingHours),
+    serviceOptions: backendRestaurant.features || [],
+    highlights: backendRestaurant.features || [],
+    offerings: backendRestaurant.features || [],
+    accessibility: [],
+    reviews: transformReviews(backendRestaurant.reviews || []),
+    aiMatchScore: backendRestaurant.aiMatchScore,
+    vectorScore: backendRestaurant.vectorScore,
+    keywordScore: backendRestaurant.keywordScore,
+    llmScore: backendRestaurant.llmScore,
+    llmReasoning: backendRestaurant.llmReasoning,
+  }
+}
 
 export function RestaurantFinder() {
   const {

@@ -8,7 +8,60 @@ import { twMerge } from "tailwind-merge"
 const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs))
 }
-import { apiService } from '../lib/api'
+// Direct API implementation to avoid import issues
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  
+  if (import.meta.env.DEV) {
+    return 'http://localhost:3001/api'
+  }
+  
+  return '/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
+class ApiService {
+  async searchRestaurants(request: any): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/search/restaurants`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async getRestaurantById(id: string): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/restaurants/${id}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch restaurant: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+
+  async getSearchSuggestions(query: string): Promise<{ suggestions: string[] }> {
+    const response = await fetch(`${API_BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`)
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch suggestions: ${response.statusText}`)
+    }
+
+    return response.json()
+  }
+}
+
+const apiService = new ApiService()
 
 interface SearchBarProps {
   onSearch: (query: string) => void
