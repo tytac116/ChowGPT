@@ -4,7 +4,7 @@ import { Button } from './ui/Button'
 import { UserProfile } from './UserProfile'
 import { useTheme } from '../contexts/ThemeContext'
 import { mockUser } from '../types/user'
-import { cn } from '../lib/utils'
+import { cn } from '../lib'
 
 interface NavigationProps {
   isOpen: boolean

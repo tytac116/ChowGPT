@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import * as VisuallyHidden from '@radix-ui/react-visually-hidden'
 import { X } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { cn } from '../../lib'
 
 interface ModalProps {
   open: boolean

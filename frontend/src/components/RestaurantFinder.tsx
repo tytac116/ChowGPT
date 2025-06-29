@@ -8,7 +8,7 @@ import { SearchingAnimation } from './ui/TypeWriter'
 import { useAppState } from '../contexts/AppStateContext'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
-import { generateContextualMatchScore } from '../lib/utils'
+import { generateContextualMatchScore } from '../lib'
 import { apiService, transformBackendRestaurant, BackendSearchRequest } from '../lib/api'
 
 export function RestaurantFinder() {

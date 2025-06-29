@@ -3,7 +3,7 @@ import { Filter, X, ChevronDown, ChevronUp, Star } from 'lucide-react'
 import { Button } from './ui/Button'
 import { FilterState, defaultFilterState } from '../types/filters'
 import { filterOptions } from '../data/filterOptions'
-import { cn } from '../lib/utils'
+import { cn } from '../lib'
 
 interface FilterPanelProps {
   isOpen: boolean

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { X, ChevronLeft, ChevronRight, Download, Share2 } from 'lucide-react'
 import { Button } from './ui/Button'
-import { cn } from '../lib/utils'
+import { cn } from '../lib'
 
 interface PhotoGalleryProps {
   images: string[]

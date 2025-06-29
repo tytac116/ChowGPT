@@ -4,9 +4,8 @@ import { Modal } from './ui/Modal'
 import { Button } from './ui/Button'
 import { PhotoGallery } from './PhotoGallery'
 import { Restaurant, AIMatchExplanation } from '../types/restaurant'
-import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel } from '../lib/utils'
+import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel, cn } from '../lib'
 import { useAppState } from '../contexts/AppStateContext'
-import { cn } from '../lib/utils'
 
 interface RestaurantModalProps {
   restaurant: (Restaurant & {

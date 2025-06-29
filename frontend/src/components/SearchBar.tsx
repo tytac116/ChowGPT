@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { searchSuggestions } from '../data/mockRestaurants'
-import { cn } from '../lib/utils'
+import { cn } from '../lib'
 import { apiService } from '../lib/api'
 
 interface SearchBarProps {

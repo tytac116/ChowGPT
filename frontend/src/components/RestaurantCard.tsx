@@ -1,9 +1,8 @@
 import React from 'react'
 import { Star, MapPin, Users, DollarSign, ExternalLink } from 'lucide-react'
 import { Restaurant } from '../types/restaurant'
-import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel } from '../lib/utils'
+import { formatPrice, generateContextualMatchScore, getMatchScoreColor, getMatchScoreLabel, cn } from '../lib'
 import { useAppState } from '../contexts/AppStateContext'
-import { cn } from '../lib/utils'
 
 interface RestaurantCardProps {
   restaurant: Restaurant & {
