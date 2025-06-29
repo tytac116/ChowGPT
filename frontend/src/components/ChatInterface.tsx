@@ -94,31 +94,78 @@ export function ChatInterface() {
     setInputValue('')
     setIsTyping(true)
 
-    try {
-      // Send message to ChatService
-      const response = await apiService.sendChatMessage(userMessage.content, sessionId)
-      
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: response.response,
-        timestamp: new Date(response.timestamp)
-      }
+    // Create a placeholder assistant message that will be updated with streaming content
+    const assistantMessageId = (Date.now() + 1).toString()
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      type: 'assistant',
+      content: '',
+      timestamp: new Date()
+    }
 
-      setChatMessages(prev => [...prev, assistantMessage])
+    setChatMessages(prev => [...prev, assistantMessage])
+
+    try {
+      // Use streaming chat
+      await apiService.sendStreamingChatMessage(
+        userMessage.content,
+        sessionId,
+        (token: string) => {
+          // Update the assistant message with new tokens as they arrive
+          setChatMessages(prev => 
+            prev.map(msg => 
+              msg.id === assistantMessageId 
+                ? { ...msg, content: msg.content + token }
+                : msg
+            )
+          )
+        },
+        (fullResponse: string) => {
+          // Ensure the final message is complete
+          setChatMessages(prev => 
+            prev.map(msg => 
+              msg.id === assistantMessageId 
+                ? { ...msg, content: fullResponse, timestamp: new Date() }
+                : msg
+            )
+          )
+          setIsTyping(false)
+        },
+        (error: string) => {
+          // Handle streaming errors
+          console.error('Streaming error:', error)
+          
+          const errorMessage: Message = {
+            id: assistantMessageId,
+            type: 'assistant',
+            content: "I'm sorry, I encountered an error processing your request. Please try again.",
+            timestamp: new Date()
+          }
+
+          setChatMessages(prev => 
+            prev.map(msg => 
+              msg.id === assistantMessageId ? errorMessage : msg
+            )
+          )
+          setIsTyping(false)
+        }
+      )
     } catch (error) {
-      console.error('Failed to send chat message:', error)
+      console.error('Failed to send streaming chat message:', error)
       
       // Show error message to user
       const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+        id: assistantMessageId,
         type: 'assistant',
         content: "I'm sorry, I encountered an error processing your request. Please try again.",
         timestamp: new Date()
       }
 
-      setChatMessages(prev => [...prev, errorMessage])
-    } finally {
+      setChatMessages(prev => 
+        prev.map(msg => 
+          msg.id === assistantMessageId ? errorMessage : msg
+        )
+      )
       setIsTyping(false)
     }
   }
