@@ -15,11 +15,42 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// CORS configuration - Enhanced for development
+// CORS configuration - Enhanced for development and production
 const corsOptions = {
-  origin: isDevelopment 
-    ? ['http://localhost:3000', 'http://localhost:3000','http://localhost:5173', 'http://localhost:4173', 'https://chowgpt.onrender.com', 'https://chowgpt.vercel.app/'] // Allow common dev ports
-    : SERVER_CONFIG.corsOrigin,
+  origin: (origin: string | undefined, callback: (err: Error | null, allowed?: boolean) => void) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      console.log('✅ CORS: Allowing request with no origin');
+      return callback(null, true);
+    }
+    
+    // Define allowed origins for both development and production
+    const allowedOrigins = [
+      // Development origins
+      'http://localhost:3000',
+      'http://localhost:5173', 
+      'http://localhost:4173',
+      'http://localhost:3001',
+      // Production origins
+      'https://chowgpt.onrender.com',
+      'https://chowgpt.vercel.app',
+      'https://chowgpt-frontend.vercel.app',
+      // Add the environment variable if it exists
+      ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+    ];
+    
+    // Allow all subdomains of vercel.app
+    const isVercelDomain = origin.match(/^https:\/\/.*\.vercel\.app$/);
+    
+    if (allowedOrigins.includes(origin) || isVercelDomain) {
+      console.log(`✅ CORS: Allowing origin: ${origin}`);
+      callback(null, true);
+    } else {
+      console.log(`❌ CORS: Rejecting origin: ${origin}`);
+      console.log(`📋 CORS: Allowed origins: ${allowedOrigins.join(', ')}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
