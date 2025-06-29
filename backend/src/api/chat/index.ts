@@ -67,6 +67,81 @@ export async function sendMessage(req: Request, res: Response) {
 }
 
 /**
+ * POST /api/chat/stream
+ * Send a message to the chatbot with streaming response
+ */
+export async function sendStreamingMessage(req: Request, res: Response) {
+  try {
+    const { message, sessionId }: ChatRequest = req.body;
+
+    // Validate request
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({
+        error: 'Message is required and must be a non-empty string'
+      });
+    }
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      return res.status(400).json({
+        error: 'Session ID is required and must be a string'
+      });
+    }
+
+    console.log(`💬 Streaming chat message from session ${sessionId}: ${message}`);
+
+    // Set up Server-Sent Events
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Cache-Control',
+    });
+
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ type: 'start', sessionId })}\n\n`);
+
+    let fullResponse = '';
+
+    // Stream the response
+    await chatService.sendStreamingMessage(
+      sessionId,
+      message.trim(),
+      (token: string) => {
+        // Send each token as it arrives
+        fullResponse += token;
+        res.write(`data: ${JSON.stringify({ 
+          type: 'token', 
+          token, 
+          sessionId 
+        })}\n\n`);
+      },
+      (complete: string) => {
+        // Send completion message
+        res.write(`data: ${JSON.stringify({ 
+          type: 'complete', 
+          response: complete, 
+          sessionId,
+          timestamp: new Date()
+        })}\n\n`);
+        
+        console.log(`🤖 Streaming complete for session ${sessionId}: ${complete.substring(0, 100)}...`);
+        res.end();
+      }
+    );
+
+  } catch (error) {
+    console.error('❌ Streaming chat API error:', error);
+    res.write(`data: ${JSON.stringify({ 
+      type: 'error', 
+      error: 'Failed to process streaming message',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    })}\n\n`);
+    res.end();
+  }
+}
+
+/**
  * GET /api/chat/history/:sessionId
  * Get chat history for a session
  */

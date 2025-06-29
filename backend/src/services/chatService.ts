@@ -22,6 +22,7 @@ export class ChatService {
   private sessions: Map<string, ChatSession> = new Map();
   private hybridSearch: HybridSearchService;
   private model: ChatOpenAI;
+  private streamingModel: ChatOpenAI;
 
   constructor() {
     if (!OPENAI_CONFIG) {
@@ -29,10 +30,20 @@ export class ChatService {
     }
     
     this.hybridSearch = new HybridSearchService();
+    
+    // Regular model for non-streaming
     this.model = new ChatOpenAI({
       openAIApiKey: OPENAI_CONFIG.apiKey,
       modelName: 'gpt-4o-mini',
       temperature: 0.7,
+    });
+
+    // Streaming model
+    this.streamingModel = new ChatOpenAI({
+      openAIApiKey: OPENAI_CONFIG.apiKey,
+      modelName: 'gpt-4o-mini',
+      temperature: 0.7,
+      streaming: true,
     });
   }
 
@@ -125,6 +136,101 @@ Assistant: `);
     } catch (error) {
       console.error('Chat error:', error);
       return "I'm sorry, I encountered an error. Could you please try asking again?";
+    }
+  }
+
+  // New streaming method
+  async sendStreamingMessage(
+    sessionId: string, 
+    userMessage: string,
+    onToken: (token: string) => void,
+    onComplete: (fullResponse: string) => void
+  ): Promise<void> {
+    if (!this.sessions.has(sessionId)) {
+      await this.createSession(sessionId);
+    }
+
+    const session = this.sessions.get(sessionId)!;
+
+    try {
+      const isRestaurantQuery = this.isRestaurantQuery(userMessage);
+      let restaurantContext = '';
+
+      if (isRestaurantQuery) {
+        const searchResults = await this.hybridSearch.executeHybridSearch({
+          originalQuery: userMessage,
+          rewrittenQuery: userMessage,
+          limit: 5
+        });
+        restaurantContext = this.formatRestaurantResults(searchResults);
+      }
+
+      const enhancedMessage = restaurantContext 
+        ? `${userMessage}\n\nRelevant restaurants found:\n${restaurantContext}`
+        : userMessage;
+
+      // Build the full prompt manually for streaming
+      const history = await session.memory.chatHistory.getMessages();
+      const historyString = history.map(msg => `${msg._getType()}: ${msg.content}`).join('\n');
+      
+      const fullPrompt = `You are ChowGPT, a friendly AI restaurant assistant for Cape Town, South Africa. You help users find the perfect dining experiences.
+
+Your personality:
+- Enthusiastic about Cape Town's food scene
+- Helpful and conversational
+- Always aim to understand the user's specific needs
+
+When users ask about restaurants:
+1. Ask clarifying questions about their preferences
+2. Use the restaurant search results I provide to give specific recommendations
+3. Include practical details like location, price range, and why it matches their needs
+4. Provide Google Maps links: https://www.google.com/maps/search/?q=[Restaurant Name]+Cape Town
+5. Include website links when available
+
+Previous conversation:
+${historyString}
+
+User: ${enhancedMessage}
+Assistant: `;
+
+      let fullResponse = '';
+
+      // Stream the response
+      const stream = await this.streamingModel.stream(fullPrompt);
+      
+      for await (const chunk of stream) {
+        if (chunk.content) {
+          const token = chunk.content.toString();
+          fullResponse += token;
+          onToken(token);
+        }
+      }
+
+      // Store messages in session
+      session.messages.push({
+        role: 'user',
+        content: userMessage,
+        timestamp: new Date(),
+      });
+
+      session.messages.push({
+        role: 'assistant',
+        content: fullResponse,
+        timestamp: new Date(),
+      });
+
+      // Update memory
+      await session.memory.saveContext(
+        { input: enhancedMessage },
+        { output: fullResponse }
+      );
+
+      onComplete(fullResponse);
+    } catch (error) {
+      console.error('Streaming chat error:', error);
+      const errorMessage = "I'm sorry, I encountered an error. Could you please try asking again?";
+      onToken(errorMessage);
+      onComplete(errorMessage);
     }
   }
 

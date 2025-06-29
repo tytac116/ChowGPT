@@ -59,19 +59,24 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: SERVER_CONFIG.rateLimitWindowMs,
-  max: SERVER_CONFIG.rateLimitMaxRequests,
-  message: {
-    error: 'Too Many Requests',
-    message: 'You have exceeded the request limit. Please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// Rate limiting - Disabled in development for easier testing
+if (!isDevelopment) {
+  const limiter = rateLimit({
+    windowMs: SERVER_CONFIG.rateLimitWindowMs,
+    max: SERVER_CONFIG.rateLimitMaxRequests,
+    message: {
+      error: 'Too Many Requests',
+      message: 'You have exceeded the request limit. Please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+  });
 
-app.use(limiter);
+  app.use(limiter);
+  console.log('🛡️ Rate limiting enabled for production');
+} else {
+  console.log('🔧 Rate limiting disabled for development');
+}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
