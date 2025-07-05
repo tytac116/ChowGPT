@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Menu, X, Sun, Moon, ChefHat, Search, MessageCircle, User, LogOut } from 'lucide-react'
+import { useUser, UserButton } from '@clerk/clerk-react'
 import { Button } from './ui/Button'
 import { UserProfile } from './UserProfile'
 import { useTheme } from '../contexts/ThemeContext'
-import { mockUser } from '../types/user'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -22,12 +23,19 @@ interface NavigationProps {
 
 export function Navigation({ isOpen, onToggle, activeTab, onTabChange, onSignOut }: NavigationProps) {
   const { theme, toggleTheme } = useTheme()
+  const { user } = useUser()
+  const navigate = useNavigate()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
 
   const handleSignOut = () => {
     if (onSignOut) {
       onSignOut()
     }
+  }
+
+  const handleNavigation = (path: string, tab: 'finder' | 'chat') => {
+    navigate(path)
+    onTabChange(tab) // This will close mobile nav
   }
 
   return (
@@ -71,32 +79,34 @@ export function Navigation({ isOpen, onToggle, activeTab, onTabChange, onSignOut
 
           {/* User Profile Section */}
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setIsProfileOpen(true)}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              <img
-                src={mockUser.avatar}
-                alt={mockUser.name}
-                className="w-10 h-10 rounded-full"
-              />
+            <div className="flex items-center space-x-3 p-3 rounded-lg">
+              <div className="w-10 h-10 rounded-full overflow-hidden">
+                <UserButton
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: "w-10 h-10",
+                      userButtonPopoverCard: "z-50"
+                    }
+                  }}
+                />
+              </div>
               <div className="flex-1 text-left">
                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                  {mockUser.name}
+                  {user?.fullName || user?.firstName || 'User'}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  View Profile
+                  {user?.primaryEmailAddress?.emailAddress || 'Member'}
                 </div>
               </div>
-              <User className="h-4 w-4 text-gray-400" />
-            </button>
+            </div>
           </div>
 
           {/* Navigation Links */}
           <div className="flex-1 p-4">
             <div className="space-y-2">
               <button
-                onClick={() => onTabChange('finder')}
+                onClick={() => handleNavigation('/finder', 'finder')}
                 className={cn(
                   'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors',
                   activeTab === 'finder'
@@ -109,7 +119,7 @@ export function Navigation({ isOpen, onToggle, activeTab, onTabChange, onSignOut
               </button>
 
               <button
-                onClick={() => onTabChange('chat')}
+                onClick={() => handleNavigation('/chat', 'chat')}
                 className={cn(
                   'w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors',
                   activeTab === 'chat'

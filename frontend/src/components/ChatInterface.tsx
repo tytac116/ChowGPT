@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Sparkles, ChefHat } from 'lucide-react'
 import { Button } from './ui/Button'
-import { apiService } from '@/lib/api.ts'
+import { useAuthApiService } from '../lib/authApiService'
 
 // Simple, clean message interface
 interface ChatMessage {
@@ -36,6 +36,9 @@ export function ChatInterface() {
   const [sessionId] = useState(generateSessionId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Use authenticated API service
+  const authApiService = useAuthApiService()
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -87,7 +90,7 @@ export function ChatInterface() {
       let streamingContent = ''
       let streamingWorked = false
       
-      await apiService.sendStreamingChatMessage(
+      await authApiService.sendStreamingChatMessage(
         userMessage,
         sessionId,
         (token: string) => {
@@ -138,7 +141,7 @@ export function ChatInterface() {
     async function fallbackToRegularChat() {
       try {
         console.log('🔄 Using fallback regular chat API')
-        const response = await apiService.sendChatMessage(userMessage, sessionId)
+        const response = await authApiService.sendChatMessage(userMessage, sessionId)
         
         // Update the placeholder with regular response
         setMessages(prev => 

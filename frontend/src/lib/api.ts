@@ -123,14 +123,27 @@ class ApiService {
     this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
   }
 
+  // Get authentication headers for API calls
+  private getAuthHeaders(token?: string): HeadersInit {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
   // Search restaurants
-  async searchRestaurants(request: BackendSearchRequest): Promise<SearchResponse> {
+  async searchRestaurants(request: BackendSearchRequest, token?: string): Promise<SearchResponse> {
     try {
+      const headers = this.getAuthHeaders(token);
+      
       const response = await fetch(`${API_BASE_URL}/search/restaurants`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(request),
       });
 
@@ -148,13 +161,13 @@ class ApiService {
 
 
   // Generate AI match explanation for a restaurant
-  async generateAIExplanation(restaurantId: string, userQuery: string): Promise<AIExplanationResponse> {
+  async generateAIExplanation(restaurantId: string, userQuery: string, token?: string): Promise<AIExplanationResponse> {
     try {
+      const headers = this.getAuthHeaders(token);
+      
       const response = await fetch(`${API_BASE_URL}/restaurants/${restaurantId}/ai-explanation`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ userQuery }),
       });
 
@@ -175,8 +188,12 @@ class ApiService {
     }
   }
 
-  async getRestaurantById(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/restaurants/${id}`)
+  async getRestaurantById(id: string, token?: string): Promise<any> {
+    const headers = this.getAuthHeaders(token);
+    
+    const response = await fetch(`${API_BASE_URL}/restaurants/${id}`, {
+      headers
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch restaurant: ${response.statusText}`)
@@ -185,8 +202,12 @@ class ApiService {
     return response.json()
   }
 
-  async getSearchSuggestions(query: string): Promise<{ suggestions: string[] }> {
-    const response = await fetch(`${API_BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`)
+  async getSearchSuggestions(query: string, token?: string): Promise<{ suggestions: string[] }> {
+    const headers = this.getAuthHeaders(token);
+    
+    const response = await fetch(`${API_BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`, {
+      headers
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch suggestions: ${response.statusText}`)
@@ -196,127 +217,123 @@ class ApiService {
   }
 
   // Chat API methods
-  async sendChatMessage(message: string, sessionId: string): Promise<ChatResponse> {
+  async sendChatMessage(message: string, sessionId: string, token?: string): Promise<ChatResponse> {
+    const headers = this.getAuthHeaders(token);
+    
     const response = await fetch(`${API_BASE_URL}/chat/message`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ message, sessionId }),
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to send chat message: ${response.statusText}`);
+      throw new Error(`Chat request failed: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    return await response.json();
   }
 
-  // Streaming chat method
+  // Stream chat messages
   async sendStreamingChatMessage(
     message: string, 
     sessionId: string,
     onToken: (token: string) => void,
     onComplete: (response: string) => void,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    authToken?: string
   ): Promise<void> {
+    const controller = new AbortController();
+    let fullResponse = '';
+    
     try {
+      const headers = this.getAuthHeaders(authToken);
+      
       const response = await fetch(`${API_BASE_URL}/chat/stream`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-        },
+        headers,
         body: JSON.stringify({ message, sessionId }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to send streaming chat message: ${response.statusText}`);
+        throw new Error(`Stream request failed: ${response.status} ${response.statusText}`);
       }
 
       const reader = response.body?.getReader();
       if (!reader) {
-        throw new Error('Response body is not readable');
+        throw new Error('No response body reader available');
       }
 
       const decoder = new TextDecoder();
-      let buffer = '';
-      let fullResponse = '';
 
-      // Enhanced streaming loop based on Medium article approach
       while (true) {
         const { done, value } = await reader.read();
         
-        if (done) {
-          break;
-        }
+        if (done) break;
 
-        // Decode the chunk and add to buffer
         const chunk = decoder.decode(value, { stream: true });
-        buffer += chunk;
-        
-        // Process complete lines
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Keep incomplete line in buffer
+        const lines = chunk.split('\n');
 
         for (const line of lines) {
-          if (line.trim() && line.startsWith('data: ')) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            
+            if (data === '[DONE]') {
+              onComplete(fullResponse);
+              return;
+            }
+
             try {
-              const eventData = JSON.parse(line.substring(6));
+              const parsed = JSON.parse(data);
               
-              switch (eventData.type) {
-                case 'start':
-                  console.log('🌊 Streaming started for session:', eventData.sessionId);
-                  break;
-                  
-                case 'token':
-                  fullResponse += eventData.token;
-                  onToken(eventData.token);
-                  break;
-                  
-                case 'complete':
-                  console.log(`✅ Streaming complete: ${eventData.totalTokens} tokens`);
-                  onComplete(eventData.response);
-                  break;
-                  
-                case 'error':
-                  console.error('❌ Streaming error:', eventData.error);
-                  onError?.(eventData.error);
-                  break;
+              if (parsed.error) {
+                onError?.(parsed.error);
+                return;
+              }
+
+              if (parsed.token) {
+                fullResponse += parsed.token;
+                onToken(parsed.token);
               }
             } catch (parseError) {
-              console.error('Failed to parse SSE data:', parseError);
+              console.warn('Failed to parse streaming response:', parseError);
             }
           }
         }
       }
+
+      onComplete(fullResponse);
     } catch (error) {
-      console.error('Streaming chat error:', error);
-      onError?.(error instanceof Error ? error.message : 'Unknown streaming error');
+      if (error instanceof Error) {
+        onError?.(error.message);
+      } else {
+        onError?.('Unknown streaming error occurred');
+      }
     }
   }
 
-  async getChatHistory(sessionId: string): Promise<ChatHistoryResponse> {
+  // Get chat history
+  async getChatHistory(sessionId: string, token?: string): Promise<ChatHistoryResponse> {
+    const headers = this.getAuthHeaders(token);
+    
     const response = await fetch(`${API_BASE_URL}/chat/history/${sessionId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to get chat history: ${response.statusText}`);
+      throw new Error(`Failed to fetch chat history: ${response.statusText}`);
     }
 
     return response.json();
   }
 
-  async clearChatSession(sessionId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/chat/session/${sessionId}`, {
+  // Clear chat session
+  async clearChatSession(sessionId: string, token?: string): Promise<void> {
+    const headers = this.getAuthHeaders(token);
+    
+    const response = await fetch(`${API_BASE_URL}/chat/clear/${sessionId}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers
     });
 
     if (!response.ok) {
@@ -325,7 +342,7 @@ class ApiService {
   }
 }
 
-export const apiService = new ApiService()
+export const apiService = new ApiService();
 
 // Utility functions to transform backend data to frontend format
 export function transformBackendRestaurant(backendRestaurant: BackendRestaurant): any {
