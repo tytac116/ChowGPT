@@ -5,13 +5,13 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_URL
   }
   
-  // Fallback to localhost in development
+  // Development: use localhost
   if (import.meta.env.DEV) {
     return 'http://localhost:3001/api'
   }
   
-  // Production fallback - adjust as needed
-  return '/api'
+  // Production: always use Render backend
+  return 'https://chowgpt.onrender.com/api'
 }
 
 const API_BASE_URL = getApiBaseUrl()
@@ -120,7 +120,8 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    // Use the same logic as getApiBaseUrl() for consistency
+    this.baseURL = API_BASE_URL.replace('/api', ''); // Remove /api suffix since it's added per endpoint
   }
 
   // Get authentication headers for API calls
