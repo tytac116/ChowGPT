@@ -19,6 +19,7 @@
   "author": "ChowGPT Team",
   "license": "MIT",
   "dependencies": {
+    "@clerk/clerk-sdk-node": "^4.13.23",
     "@langchain/community": "^0.3.47",
     "@langchain/core": "^0.3.61",
     "@langchain/openai": "^0.5.16",

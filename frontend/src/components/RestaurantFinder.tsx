@@ -6,6 +6,7 @@ import { FilterPanel } from './FilterPanel'
 import { LoadingSpinner } from './ui/LoadingSpinner'
 import { SearchingAnimation } from './ui/TypeWriter'
 import { useAppState } from '../contexts/AppStateContext'
+import { useAuthApiService } from '../lib/authApiService'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
 
@@ -57,106 +58,6 @@ const generateContextualMatchScore = (restaurantId: string, searchQuery?: string
   return baseScore
 }
 
-// Direct API implementation to avoid import issues
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
-  }
-  
-  if (import.meta.env.DEV) {
-    return 'http://localhost:3001/api'
-  }
-  
-  return '/api'
-}
-
-const API_BASE_URL = getApiBaseUrl()
-
-interface BackendSearchRequest {
-  query: string
-  filters?: {
-    cuisine?: string[]
-    priceRange?: {
-      min?: number
-      max?: number
-    }
-    location?: string
-    rating?: number
-    features?: string[]
-  }
-  limit?: number
-}
-
-interface BackendRestaurant {
-  placeId: string
-  name: string
-  cuisine: string[]
-  location: string | { lat: number; lng: number }
-  description?: string
-  rating?: number
-  priceLevel?: string
-  features: string[]
-  aiMatchScore: number
-  vectorScore: number
-  keywordScore: number
-  llmScore: number
-  llmReasoning: string
-  reviewSummary: string
-  operatingHours?: string
-  parkingInfo?: string
-  reviews?: any[]
-  phone?: string
-  website?: string
-  address?: string
-  neighborhood?: string
-  categories?: string[]
-  totalScore?: number
-  reviewsCount?: number
-  imageUrls?: string[]
-  images?: string[]
-  openingHours?: any[]
-}
-
-class ApiService {
-  async searchRestaurants(request: BackendSearchRequest): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/search/restaurants`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Search failed: ${response.statusText}`)
-    }
-
-    return response.json()
-  }
-
-  async getRestaurantById(id: string): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/restaurants/${id}`)
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch restaurant: ${response.statusText}`)
-    }
-
-    return response.json()
-  }
-
-  async getSearchSuggestions(query: string): Promise<{ suggestions: string[] }> {
-    const response = await fetch(`${API_BASE_URL}/search/suggestions?q=${encodeURIComponent(query)}`)
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch suggestions: ${response.statusText}`)
-    }
-
-    return response.json()
-  }
-}
-
-const apiService = new ApiService()
-
 function convertPriceToRands(priceLevel?: string): string {
   if (!priceLevel) return 'R150-300'
   
@@ -204,234 +105,134 @@ function transformOpeningHours(openingHours?: any[]): any {
 }
 
 function transformReviews(reviews: any[]): any[] {
-  return reviews.slice(0, 5).map((review, index) => ({
-    id: review.reviewId || `review-${index}`,
-    author: review.reviewerName || review.author || 'Anonymous',
+  if (!reviews || !Array.isArray(reviews)) return []
+
+  return reviews.map(review => ({
+    id: review.id || review.reviewId || `review-${Date.now()}`,
+    author: review.author || 'Anonymous',
     rating: review.rating || 4,
-    text: review.text || review.review || 'Great experience!',
-    date: review.publishedAtDate || review.date || new Date().toISOString().split('T')[0],
-    helpful: review.helpful || Math.floor(Math.random() * 20)
+    text: review.text || review.content || 'Great experience!',
+    date: review.date || new Date().toISOString().split('T')[0],
   }))
 }
 
-function transformBackendRestaurant(backendRestaurant: BackendRestaurant): any {
+function transformBackendRestaurant(backendRestaurant: any): any {
   return {
     id: backendRestaurant.placeId,
-    title: backendRestaurant.name,
-    categoryName: Array.isArray(backendRestaurant.cuisine) ? backendRestaurant.cuisine[0] : backendRestaurant.cuisine,
-    categories: Array.isArray(backendRestaurant.cuisine) ? backendRestaurant.cuisine : [backendRestaurant.cuisine],
-    totalScore: backendRestaurant.rating || backendRestaurant.aiMatchScore / 20,
-    reviewsCount: backendRestaurant.reviewsCount || (backendRestaurant.reviews?.length || 0),
-    price: convertPriceToRands(backendRestaurant.priceLevel),
-    address: backendRestaurant.address || '',
-    neighborhood: backendRestaurant.neighborhood || extractLocationString(backendRestaurant.location),
-    reviewsTags: backendRestaurant.features || [],
-    imagesCount: backendRestaurant.images?.length || backendRestaurant.imageUrls?.length || 0,
-    imageUrls: backendRestaurant.images || backendRestaurant.imageUrls || [],
-    phone: backendRestaurant.phone,
-    website: backendRestaurant.website,
-    openingHours: transformOpeningHours(backendRestaurant.openingHours),
-    serviceOptions: backendRestaurant.features || [],
-    highlights: backendRestaurant.features || [],
-    offerings: backendRestaurant.features || [],
-    accessibility: [],
+    name: backendRestaurant.name || backendRestaurant.title || 'Restaurant',
+    cuisine: backendRestaurant.cuisine || backendRestaurant.categories || ['Restaurant'],
+    location: extractLocationString(backendRestaurant.location),
+    description: backendRestaurant.description || backendRestaurant.reviewSummary || 'Great dining experience in Cape Town.',
+    rating: backendRestaurant.rating || backendRestaurant.totalScore || 4.0,
+    priceRange: convertPriceToRands(backendRestaurant.priceLevel || backendRestaurant.price || backendRestaurant.averagePrice),
+    features: backendRestaurant.features || [],
+    matchScore: generateContextualMatchScore(backendRestaurant.placeId),
+    aiExplanation: backendRestaurant.llmReasoning || 'This restaurant matches your preferences based on our analysis.',
+    address: backendRestaurant.address || backendRestaurant.location || 'Cape Town',
+    phone: backendRestaurant.phone || '',
+    website: backendRestaurant.website || '',
+    neighborhood: backendRestaurant.neighborhood || 'Cape Town',
+    reviewCount: backendRestaurant.reviewsCount || 0,
+    images: backendRestaurant.imageUrls || backendRestaurant.images || getDefaultImages(),
+    hours: transformOpeningHours(backendRestaurant.openingHours),
     reviews: transformReviews(backendRestaurant.reviews || []),
-    aiMatchScore: backendRestaurant.aiMatchScore,
-    vectorScore: backendRestaurant.vectorScore,
-    keywordScore: backendRestaurant.keywordScore,
-    llmScore: backendRestaurant.llmScore,
-    llmReasoning: backendRestaurant.llmReasoning,
+    parkingInfo: backendRestaurant.parkingInfo || 'Street parking available',
+    dietaryOptions: backendRestaurant.features?.filter((f: string) => 
+      f.toLowerCase().includes('vegan') || 
+      f.toLowerCase().includes('vegetarian') || 
+      f.toLowerCase().includes('gluten')
+    ) || [],
+    operatingHours: backendRestaurant.operatingHours || 'Daily: 09:00 - 22:00',
   }
 }
 
 export function RestaurantFinder() {
-  const {
-    searchQuery,
-    setSearchQuery,
-    restaurants,
-    setRestaurants,
-    filteredRestaurants,
-    setFilteredRestaurants,
-    hasSearched,
-    setHasSearched,
-    filters,
-    setFilters,
-    isFilterPanelOpen,
-    setIsFilterPanelOpen,
-    selectedRestaurant,
-    setSelectedRestaurant
-  } = useAppState()
-
+  const { restaurants, setRestaurants, searchQuery, setSearchQuery, filters, setFilters } = useAppState()
   const [isLoading, setIsLoading] = useState(false)
-  const [searchError, setSearchError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
   const [searchMetadata, setSearchMetadata] = useState<any>(null)
 
+  // Use authenticated API service
+  const authApiService = useAuthApiService()
+
   const handleSearch = async (query: string) => {
+    if (!query.trim()) {
+      setRestaurants([])
+      setSearchQuery('')
+      setError(null)
+      return
+    }
+
     setIsLoading(true)
-    setHasSearched(true)
+    setError(null)
     setSearchQuery(query)
-    setSearchError(null)
-    
+
     try {
-      console.log('🔍 Searching for:', query)
-      
-      const searchRequest: BackendSearchRequest = {
+      const searchRequest = {
         query: query.trim(),
-        limit: 9,
         filters: {
-          // Map frontend filters to backend format if needed
-          ...(filters.selectedCategories.length > 0 && { cuisine: filters.selectedCategories }),
-          ...(filters.minRating > 0 && { rating: filters.minRating }),
-          ...(filters.selectedNeighborhoods.length > 0 && { location: filters.selectedNeighborhoods[0] }),
-          ...(filters.selectedFeatures.length > 0 && { features: filters.selectedFeatures }),
-        }
+          cuisine: filters.selectedCategories,
+          priceRange: filters.selectedPriceRanges.length > 0 ? {
+            min: filters.selectedPriceRanges[0] === 'Under R150' ? 0 : 
+                 filters.selectedPriceRanges[0] === 'R150-300' ? 150 :
+                 filters.selectedPriceRanges[0] === 'R300-500' ? 300 :
+                 filters.selectedPriceRanges[0] === 'R500-800' ? 500 : 800,
+            max: filters.selectedPriceRanges[0] === 'Under R150' ? 150 : 
+                 filters.selectedPriceRanges[0] === 'R150-300' ? 300 :
+                 filters.selectedPriceRanges[0] === 'R300-500' ? 500 :
+                 filters.selectedPriceRanges[0] === 'R500-800' ? 800 : 2000
+          } : undefined,
+          location: filters.selectedNeighborhoods.length > 0 ? filters.selectedNeighborhoods[0] : undefined,
+          rating: filters.minRating > 0 ? filters.minRating : undefined,
+          features: filters.selectedFeatures
+        },
+        limit: 20
       }
 
-      // Call real backend API
-      const searchResponse = await apiService.searchRestaurants(searchRequest)
+      const response = await authApiService.searchRestaurants(searchRequest)
       
-      console.log('✅ Search response:', searchResponse)
-      setSearchMetadata(searchResponse.data.searchMetadata)
-    
-      // Transform backend restaurants to frontend format
-      const transformedRestaurants = searchResponse.data.restaurants.map(transformBackendRestaurant)
-      
-      setRestaurants(transformedRestaurants)
-      setFilteredRestaurants(transformedRestaurants)
-
-      console.log(`🎯 Found ${transformedRestaurants.length} restaurants`)
-      
-    } catch (error) {
-      console.error('❌ Search failed:', error)
-      setSearchError(error instanceof Error ? error.message : 'Search failed. Please try again.')
+      if (response.success && response.data) {
+        const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
+        setRestaurants(transformedRestaurants)
+        setSearchMetadata(response.data.searchMetadata)
+      } else {
+        throw new Error('Search failed')
+      }
+    } catch (err) {
+      console.error('Search error:', err)
+      setError(err instanceof Error ? err.message : 'Search failed. Please try again.')
       setRestaurants([])
-      setFilteredRestaurants([])
     } finally {
-    setIsLoading(false)
+      setIsLoading(false)
     }
   }
 
   const applyFilters = () => {
-    let filtered = [...restaurants]
-
-    // Apply category filter
-    if (filters.selectedCategories.length > 0) {
-      filtered = filtered.filter(restaurant =>
-        filters.selectedCategories.some(category =>
-          restaurant.categories.includes(category) || restaurant.categoryName === category
-        )
-      )
+    // Re-run search with current filters
+    if (searchQuery) {
+      handleSearch(searchQuery)
     }
+  }
 
-    // Apply price range filter - Robust price matching
-    if (filters.selectedPriceRanges.length > 0) {
-      filtered = filtered.filter(restaurant => {
-        const price = restaurant.price || ''
-        // Extract price numbers for more accurate matching
-        const priceNumbers = price.match(/\d+/g)?.map(Number) || []
-        const avgPrice = priceNumbers.length > 0 ? priceNumbers.reduce((a, b) => a + b, 0) / priceNumbers.length : 0
-        
-        return filters.selectedPriceRanges.some(range => {
-          // Direct string matching first (for exact price ranges)
-          if (price.includes(range)) return true
-          
-          // Then check by price value ranges
-          switch (range) {
-            case 'Under R150':
-              return avgPrice < 150
-            case 'R150-300':
-              return avgPrice >= 150 && avgPrice <= 300
-            case 'R300-500':
-              return avgPrice >= 300 && avgPrice <= 500
-            case 'R500-800':
-              return avgPrice >= 500 && avgPrice <= 800
-            case 'R800+':
-              return avgPrice >= 800
-            default:
-              return price.includes(range) // Fallback to string matching
-          }
-        })
-      })
+  const clearFilters = () => {
+    setFilters(defaultFilterState)
+    // Re-run search with cleared filters
+    if (searchQuery) {
+      handleSearch(searchQuery)
     }
-
-    // Apply rating filter
-    if (filters.minRating > 0) {
-      filtered = filtered.filter(restaurant => {
-        const rating = restaurant.totalScore || 0
-        return rating >= filters.minRating
-      })
-    }
-
-    // Apply neighborhood filter
-    if (filters.selectedNeighborhoods.length > 0) {
-      filtered = filtered.filter(restaurant =>
-        filters.selectedNeighborhoods.includes(restaurant.neighborhood)
-      )
-    }
-
-    // Apply features filter
-    if (filters.selectedFeatures.length > 0) {
-      filtered = filtered.filter(restaurant =>
-        filters.selectedFeatures.some(feature =>
-          restaurant.reviewsTags.includes(feature) ||
-          restaurant.highlights.includes(feature) ||
-          restaurant.offerings.includes(feature) ||
-          restaurant.serviceOptions.includes(feature)
-        )
-      )
-    }
-
-    // Apply open now filter (mock implementation)
-    if (filters.openNow) {
-      const currentHour = new Date().getHours()
-      filtered = filtered.filter(restaurant => {
-        // Simple mock logic - assume most restaurants are open 11-22
-        return currentHour >= 11 && currentHour <= 22
-      })
-    }
-
-    // Apply sorting - Updated to include AI match scoring
-    switch (filters.sortBy) {
-      case 'ai-match':
-        filtered.sort((a, b) => {
-          // Use real AI match scores if available, otherwise fall back to contextual scoring
-          const scoreA = (a as any).aiMatchScore || generateContextualMatchScore(a.id, searchQuery)
-          const scoreB = (b as any).aiMatchScore || generateContextualMatchScore(b.id, searchQuery)
-          return scoreB - scoreA
-        })
-        break
-      case 'rating':
-        filtered.sort((a, b) => b.totalScore - a.totalScore)
-        break
-      case 'price-low':
-        filtered.sort((a, b) => {
-          const priceA = parseInt(a.price.match(/\d+/)?.[0] || '0')
-          const priceB = parseInt(b.price.match(/\d+/)?.[0] || '0')
-          return priceA - priceB
-        })
-        break
-      case 'price-high':
-        filtered.sort((a, b) => {
-          const priceA = parseInt(a.price.match(/\d+/)?.[0] || '0')
-          const priceB = parseInt(b.price.match(/\d+/)?.[0] || '0')
-          return priceB - priceA
-        })
-        break
-      default:
-        // Keep AI relevance order (default from backend)
-        break
-    }
-
-    setFilteredRestaurants(filtered)
-    // Don't auto-close filter panel - let users apply multiple filters
   }
 
   const openRestaurantModal = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant)
+    setIsModalOpen(true)
   }
 
   const closeRestaurantModal = () => {
     setSelectedRestaurant(null)
+    setIsModalOpen(false)
   }
 
   return (
@@ -465,12 +266,12 @@ export function RestaurantFinder() {
       )}
 
       {/* Search Error State */}
-      {searchError && (
+      {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 text-center">
           <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
             Search Failed
           </h3>
-          <p className="text-red-600 dark:text-red-300 mb-4">{searchError}</p>
+          <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
           <button
             onClick={() => handleSearch(searchQuery)}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -505,12 +306,12 @@ export function RestaurantFinder() {
           {/* Filter Panel */}
           <div className="lg:col-span-1">
             <FilterPanel
-              isOpen={isFilterPanelOpen}
-              onToggle={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
+              isOpen={showFilters}
+              onToggle={() => setShowFilters(!showFilters)}
               filters={filters}
               onFiltersChange={setFilters}
               onApplyFilters={applyFilters}
-              resultsCount={filteredRestaurants.length}
+              resultsCount={restaurants.length}
             restaurants={restaurants}
             />
           </div>
@@ -522,12 +323,12 @@ export function RestaurantFinder() {
                 Recommended Restaurants
               </h2>
               <span className="text-gray-600 dark:text-gray-400">
-                {filteredRestaurants.length} of {restaurants.length} results
+                {restaurants.length} of {restaurants.length} results
               </span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredRestaurants.map((restaurant) => (
+              {restaurants.map((restaurant) => (
                 <RestaurantCard
                   key={restaurant.id}
                   restaurant={restaurant}
@@ -538,7 +339,7 @@ export function RestaurantFinder() {
             </div>
 
             {/* No Results After Filtering */}
-            {filteredRestaurants.length === 0 && restaurants.length > 0 && (
+            {restaurants.length === 0 && (
               <div className="text-center py-16">
                 <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
                   <SearchIcon className="h-12 w-12 text-gray-400" />
@@ -550,16 +351,7 @@ export function RestaurantFinder() {
                   Try adjusting your filter criteria to see more results.
                 </p>
                 <button
-                  onClick={() => {
-                    setFilters(defaultFilterState)
-                    // Re-apply AI sorting when clearing filters
-                    const sortedByAI = [...restaurants].sort((a, b) => {
-                      const scoreA = (a as any).aiMatchScore || generateContextualMatchScore(a.id, searchQuery)
-                      const scoreB = (b as any).aiMatchScore || generateContextualMatchScore(b.id, searchQuery)
-                      return scoreB - scoreA
-                    })
-                    setFilteredRestaurants(sortedByAI)
-                  }}
+                  onClick={clearFilters}
                   className="text-primary-600 hover:text-primary-700 font-medium"
                 >
                   Clear all filters
@@ -571,7 +363,7 @@ export function RestaurantFinder() {
       )}
 
       {/* No Results State */}
-      {!isLoading && hasSearched && restaurants.length === 0 && !searchError && (
+      {!isLoading && restaurants.length === 0 && !error && (
         <div className="text-center py-16">
           <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
             <SearchIcon className="h-12 w-12 text-gray-400" />
@@ -588,7 +380,7 @@ export function RestaurantFinder() {
       {/* Restaurant Detail Modal */}
       <RestaurantModal
         restaurant={selectedRestaurant}
-        isOpen={!!selectedRestaurant}
+        isOpen={isModalOpen}
         onClose={closeRestaurantModal}
       />
     </div>

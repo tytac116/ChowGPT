@@ -44,7 +44,7 @@ export async function sendMessage(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    console.log(`💬 Chat message from session ${sessionId}: ${message}`);
+    console.log(`💬 Chat message from session ${sessionId}, user ${req.auth?.userId}: ${message}`);
 
     // Get response from chat service
     const response = await chatService.sendMessage(sessionId, message.trim());
@@ -91,7 +91,7 @@ export async function sendStreamingMessage(req: Request, res: Response): Promise
       return;
     }
 
-    console.log(`💬 Streaming chat message from session ${sessionId}: ${message}`);
+    console.log(`💬 Streaming chat message from session ${sessionId}, user ${req.auth?.userId}: ${message}`);
 
     // Set up Server-Sent Events with enhanced headers
     res.writeHead(200, {
@@ -173,6 +173,8 @@ export async function getChatHistory(req: Request, res: Response): Promise<void>
       return;
     }
 
+    console.log(`📖 Chat history request for session ${sessionId}, user ${req.auth?.userId}`);
+
     const messages = chatService.getSessionMessages(sessionId);
 
     const historyResponse: ChatHistoryResponse = {
@@ -206,20 +208,19 @@ export async function clearSession(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    console.log(`🗑️ Clearing chat session ${sessionId}, user ${req.auth?.userId}`);
+
     chatService.clearSession(sessionId);
 
-    console.log(`🗑️ Cleared chat session: ${sessionId}`);
-
     res.json({
-      success: true,
-      message: 'Session cleared successfully',
+      message: 'Chat session cleared successfully',
       sessionId
     });
 
   } catch (error) {
     console.error('❌ Clear session API error:', error);
     res.status(500).json({
-      error: 'Failed to clear session',
+      error: 'Failed to clear chat session',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

@@ -12,6 +12,7 @@ import {
 import { SearchResult } from '../../types';
 import { Request, Response } from 'express';
 import OpenAI from 'openai';
+import { requireAuth, devBypassAuth } from '../../middleware/clerkAuth';
 
 const router = Router();
 
@@ -21,9 +22,14 @@ const openai = new OpenAI({
 });
 
 // Enhanced GET /restaurants - Step 2 implementation
-// Supports enhanced=true parameter to use new format
-router.get('/', asyncHandler(async (req, res) => {
+// Supports enhanced=true parameter to use new format - Protected with authentication
+router.get('/', devBypassAuth, asyncHandler(async (req, res) => {
   const enhanced = req.query.enhanced === 'true';
+  
+  console.log('🔍 Restaurants request:', { 
+    enhanced, 
+    userId: req.auth?.userId 
+  });
   
   if (enhanced) {
     // Use enhanced validation and service for Step 2
@@ -117,9 +123,11 @@ router.get('/', asyncHandler(async (req, res) => {
   }
 }));
 
-// GET /restaurants/meta/categories - Get all available categories
-router.get('/meta/categories', asyncHandler(async (req, res) => {
+// GET /restaurants/meta/categories - Get all available categories - Protected with authentication
+router.get('/meta/categories', devBypassAuth, asyncHandler(async (req, res) => {
   try {
+    console.log('🔍 Categories request:', { userId: req.auth?.userId });
+    
     const categories = await supabaseService.getCategories();
     
     res.json({
@@ -132,11 +140,13 @@ router.get('/meta/categories', asyncHandler(async (req, res) => {
   }
 }));
 
-// GET /restaurants/meta/neighborhoods - Get all available neighborhoods
-router.get('/meta/neighborhoods', asyncHandler(async (req, res) => {
+// GET /restaurants/meta/neighborhoods - Get all available neighborhoods - Protected with authentication
+router.get('/meta/neighborhoods', devBypassAuth, asyncHandler(async (req, res) => {
   const city = req.query.city as string;
   
   try {
+    console.log('🔍 Neighborhoods request:', { city, userId: req.auth?.userId });
+    
     const neighborhoods = await supabaseService.getNeighborhoods(city);
     
     res.json({
@@ -150,10 +160,10 @@ router.get('/meta/neighborhoods', asyncHandler(async (req, res) => {
   }
 }));
 
-// Get filter options from real database data - MUST come before /:id route
-router.get('/filters', asyncHandler(async (req, res) => {
+// Get filter options from real database data - MUST come before /:id route - Protected with authentication
+router.get('/filters', devBypassAuth, asyncHandler(async (req, res) => {
   try {
-    console.log('🔧 Fetching filter options from database...');
+    console.log('🔧 Fetching filter options from database...', { userId: req.auth?.userId });
     
     const filterOptions = await supabaseService.getFilterOptions();
     
@@ -177,10 +187,10 @@ router.get('/filters', asyncHandler(async (req, res) => {
   }
 }));
 
-// GET /restaurants/debug/:id - Debug route to test database query
-router.get('/debug/:id', async (req: Request, res: Response): Promise<void> => {
+// GET /restaurants/debug/:id - Debug route to test database query - Protected with authentication
+router.get('/debug/:id', devBypassAuth, async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  console.log('🔍 Debug route called with ID:', id);
+  console.log('🔍 Debug route called with ID:', id, 'User:', req.auth?.userId);
   
   try {
     // Test basic getRestaurantById first
@@ -199,9 +209,13 @@ router.get('/debug/:id', async (req: Request, res: Response): Promise<void> => {
       basicRestaurant: basicRestaurant ? { title: basicRestaurant.title, placeId: basicRestaurant.placeId } : null,
       detailedRestaurant: detailedRestaurant ? { title: detailedRestaurant.title, id: detailedRestaurant.id } : null
     });
+    
   } catch (error) {
-    console.error('🚨 Debug route error:', error);
-    res.status(500).json({ error: 'Debug failed', details: error instanceof Error ? error.message : 'Unknown error' });
+    console.error('❌ Debug error:', error);
+    res.status(500).json({
+      error: 'Debug failed',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 });
 
