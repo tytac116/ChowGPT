@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
 import { searchSuggestions } from '../data/mockRestaurants'
+import { useMobileKeyboard } from '../hooks/useMobileKeyboard'
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -65,7 +66,7 @@ const apiService = new ApiService()
 
 interface SearchBarProps {
   onSearch: (query: string) => void
-  isLoading: boolean
+  isLoading?: boolean
   initialQuery?: string
 }
 
@@ -97,6 +98,12 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
   const [query, setQuery] = useState(initialQuery)
   const [showSuggestions, setShowSuggestions] = useState(initialQuery.length === 0)
   const [dynamicSuggestions, setDynamicSuggestions] = useState<string[]>([])
+  
+  // Mobile keyboard handler
+  const inputRef = useMobileKeyboard({ 
+    offset: 30, // Extra space from bottom
+    delay: 200  // Shorter delay for better UX
+  })
 
   useEffect(() => {
     setQuery(initialQuery)
@@ -156,12 +163,13 @@ export function SearchBar({ onSearch, isLoading, initialQuery = '' }: SearchBarP
         <div className="relative">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Describe your perfect dining experience..."
             className={cn(
-              "w-full pl-12 pr-12 py-4 text-lg border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all",
+              "w-full pl-12 pr-12 py-4 text-lg border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all search-input-mobile",
               isLoading && "opacity-50"
             )}
             disabled={isLoading}

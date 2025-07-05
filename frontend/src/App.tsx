@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { SignedIn, SignedOut, useAuth, useUser } from '@clerk/clerk-react'
 import { Navigation } from './components/Navigation'
 import { RestaurantFinder } from './components/RestaurantFinder'
@@ -9,10 +9,55 @@ import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AppStateProvider } from './contexts/AppStateContext'
 
+// Error Boundary Component for Authentication Issues
+function AuthErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [hasError, setHasError] = useState(false)
+  const navigate = useNavigate()
+  
+  useEffect(() => {
+    // Reset error state on location change
+    setHasError(false)
+  }, [])
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Authentication Error
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            We encountered an issue with the sign-in process. Please try again.
+          </p>
+          <button
+            onClick={() => {
+              setHasError(false)
+              navigate('/finder')
+            }}
+            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Continue to App
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return <>{children}</>
+}
+
 function AuthenticatedApp() {
   const { signOut } = useAuth()
   const [navOpen, setNavOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+
+  // Handle authentication success - redirect if on root
+  useEffect(() => {
+    if (location.pathname === '/') {
+      navigate('/finder', { replace: true })
+    }
+  }, [location.pathname, navigate])
 
   // Update page title based on current route
   useEffect(() => {
@@ -34,11 +79,16 @@ function AuthenticatedApp() {
     try {
       // Clear all session storage on sign out
       sessionStorage.clear()
+      localStorage.clear()
       setNavOpen(false)
       // Sign out from Clerk
       await signOut()
+      // Force redirect to home page
+      window.location.href = '/'
     } catch (error) {
       console.error('Error signing out:', error)
+      // Fallback: force reload to clear state
+      window.location.reload()
     }
   }
 
@@ -104,7 +154,7 @@ function AuthenticatedApp() {
               } 
             />
 
-            {/* Fallback for unknown routes */}
+            {/* Catch-all route for unknown paths */}
             <Route path="*" element={<Navigate to="/finder" replace />} />
           </Routes>
         </main>
@@ -114,7 +164,19 @@ function AuthenticatedApp() {
 }
 
 function AppContent() {
-  const { isLoaded } = useAuth()
+  const { isLoaded, isSignedIn } = useAuth()
+  const [authError, setAuthError] = useState(false)
+
+  // Handle authentication errors
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      // Check if we're on a protected route
+      const isProtectedRoute = window.location.pathname !== '/'
+      if (isProtectedRoute) {
+        setAuthError(true)
+      }
+    }
+  }, [isLoaded, isSignedIn])
 
   // Show loading state while Clerk determines authentication status
   if (!isLoaded) {
@@ -123,6 +185,31 @@ function AppContent() {
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading ChowGPT...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle authentication error
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Authentication Required
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Please sign in to access ChowGPT
+          </p>
+          <button
+            onClick={() => {
+              setAuthError(false)
+              window.location.href = '/'
+            }}
+            className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Go to Sign In
+          </button>
         </div>
       </div>
     )
@@ -137,7 +224,9 @@ function AppContent() {
 
       {/* Show main app if authenticated */}
       <SignedIn>
-        <AuthenticatedApp />
+        <AuthErrorBoundary>
+          <AuthenticatedApp />
+        </AuthErrorBoundary>
       </SignedIn>
     </>
   )

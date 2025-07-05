@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Send, Bot, User, Sparkles, ChefHat } from 'lucide-react'
 import { Button } from './ui/Button'
 import { useAuthApiService } from '../lib/authApiService'
+import { useMobileKeyboardTextarea } from '../hooks/useMobileKeyboard'
 
 // Simple, clean message interface
 interface ChatMessage {
@@ -35,7 +36,12 @@ export function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId] = useState(generateSessionId)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Mobile keyboard handler for textarea
+  const inputRef = useMobileKeyboardTextarea({ 
+    offset: 40, // Extra space from bottom for chat interface
+    delay: 200  // Quick response for better UX
+  })
 
   // Use authenticated API service
   const authApiService = useAuthApiService()
@@ -327,7 +333,7 @@ export function ChatInterface() {
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={isLoading ? "AI is responding..." : "Ask me about restaurants in Cape Town..."}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none max-h-32"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-2xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none max-h-32 chat-input-mobile"
                 rows={1}
                 style={{
                   minHeight: '48px',
