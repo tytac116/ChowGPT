@@ -18,7 +18,7 @@ declare global {
 export const clerkAuth = ClerkExpressRequireAuth();
 
 // Wrapper middleware with custom error handling
-export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
   clerkAuth(req, res, (error: any) => {
     if (error) {
       console.error('Clerk authentication error:', error);
@@ -48,12 +48,14 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
       });
     }
     
+    // Call next() and return to satisfy TypeScript
     next();
+    return;
   });
 };
 
 // Optional: Middleware to get user info (doesn't require auth)
-export const clerkUserInfo = (req: Request, res: Response, next: NextFunction) => {
+export const clerkUserInfo = (req: Request, res: Response, next: NextFunction): void => {
   // This can be used to get user info without requiring authentication
   // Useful for optional authentication endpoints
   try {
@@ -71,7 +73,7 @@ export const clerkUserInfo = (req: Request, res: Response, next: NextFunction) =
 };
 
 // Development-only bypass middleware (use with caution!)
-export const devBypassAuth = (req: Request, res: Response, next: NextFunction) => {
+export const devBypassAuth = (req: Request, res: Response, next: NextFunction): void => {
   if (process.env.NODE_ENV === 'development' && process.env.BYPASS_AUTH === 'true') {
     console.warn('⚠️  BYPASSING AUTHENTICATION IN DEVELOPMENT MODE');
     req.auth = {
