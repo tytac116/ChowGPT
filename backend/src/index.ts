@@ -36,7 +36,8 @@ const corsOptions = {
       'https://chowgpt.onrender.com',
       'https://chowgpt.vercel.app',
       'https://chowgpt-frontend.vercel.app',
-      'https://chowgpt.co.za',  // New custom domain
+      'https://chowgpt.co.za',  // Custom domain without www
+      'https://www.chowgpt.co.za',  // Custom domain with www
       // Add the environment variable if it exists
       ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
     ];
