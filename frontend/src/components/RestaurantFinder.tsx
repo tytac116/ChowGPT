@@ -121,21 +121,21 @@ function transformBackendRestaurant(backendRestaurant: any): Restaurant {
     // Basic info
     id: backendRestaurant.placeId || `restaurant-${Date.now()}`,
     title: backendRestaurant.name || backendRestaurant.title || 'Restaurant',
-    categoryName: backendRestaurant.cuisine?.[0] || backendRestaurant.categories?.[0] || 'Restaurant',
-    categories: backendRestaurant.cuisine || backendRestaurant.categories || ['Restaurant'],
+    categoryName: backendRestaurant.cuisine?.[0] || backendRestaurant.categories?.[0] || backendRestaurant.categoryName || 'Restaurant',
+    categories: backendRestaurant.cuisine || backendRestaurant.categories || [backendRestaurant.categoryName || 'Restaurant'],
     
     // Ratings and reviews
     totalScore: backendRestaurant.rating || backendRestaurant.totalScore || 4.0,
     reviewsCount: backendRestaurant.reviewsCount || 0,
     
     // Location and price
-    address: backendRestaurant.address || backendRestaurant.location || 'Cape Town',
-    neighborhood: backendRestaurant.neighborhood || extractLocationString(backendRestaurant.location),
+    address: backendRestaurant.address || backendRestaurant.street || backendRestaurant.location || 'Cape Town',
+    neighborhood: backendRestaurant.neighborhood || backendRestaurant.city || extractLocationString(backendRestaurant.location),
     price: convertPriceToRands(backendRestaurant.priceLevel || backendRestaurant.price || backendRestaurant.averagePrice),
     
-    // Images
-    imagesCount: backendRestaurant.imageUrls?.length || 0,
-    imageUrls: backendRestaurant.imageUrls || backendRestaurant.images || [],
+    // Images - Fix the imageUrl/imageUrls mismatch
+    imagesCount: backendRestaurant.imageUrl ? 1 : (backendRestaurant.imageUrls?.length || 0),
+    imageUrls: backendRestaurant.imageUrl ? [backendRestaurant.imageUrl] : (backendRestaurant.imageUrls || []),
     
     // Features and tags
     reviewsTags: backendRestaurant.features || backendRestaurant.highlights || [],
