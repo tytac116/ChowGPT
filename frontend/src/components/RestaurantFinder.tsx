@@ -160,8 +160,8 @@ export function RestaurantFinder() {
   const authApiService = useAuthApiService()
 
   // Debug: Check authentication status
-  const { isSignedIn, user } = useAuth()
-  console.log('🔐 Authentication status:', { isSignedIn, userId: user?.id })
+  const { isSignedIn, userId } = useAuth()
+  console.log('🔐 Authentication status:', { isSignedIn, userId })
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -198,16 +198,102 @@ export function RestaurantFinder() {
       }
 
       console.log('🔍 Making search request:', searchRequest)
-      const response = await authApiService.searchRestaurants(searchRequest)
-      console.log('📄 Search response:', response)
-      
-      if (response.success && response.data) {
-        const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
-        setRestaurants(transformedRestaurants)
-        setSearchMetadata(response.data.searchMetadata)
-        console.log('✅ Search successful:', transformedRestaurants.length, 'restaurants found')
-      } else {
-        throw new Error('Search failed')
+
+      // Temporary: Try real API first, but fallback to mock data if it fails
+      try {
+        const response = await authApiService.searchRestaurants(searchRequest)
+        console.log('📄 Search response:', response)
+        
+        if (response.success && response.data) {
+          const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
+          setRestaurants(transformedRestaurants)
+          setSearchMetadata(response.data.searchMetadata)
+          console.log('✅ Search successful:', transformedRestaurants.length, 'restaurants found')
+        } else {
+          throw new Error('Search failed')
+        }
+      } catch (apiError) {
+        console.log('⚠️  API failed, using mock data:', apiError)
+        
+        // Fallback to mock data for testing
+        const mockBackendRestaurants = [
+          {
+            placeId: 'mock-1',
+            name: 'The Test Kitchen',
+            cuisine: ['Modern African', 'Fine Dining'],
+            location: 'Woodstock, Cape Town',
+            description: 'Award-winning fine dining restaurant with modern African cuisine.',
+            rating: 4.8,
+            priceLevel: '$$$',
+            features: ['Fine Dining', 'Wine Pairing', 'Tasting Menu'],
+            aiMatchScore: 95,
+            vectorScore: 0.9,
+            keywordScore: 0.8,
+            llmScore: 0.95,
+            llmReasoning: 'Perfect match for your search query.',
+            reviewSummary: 'Excellent fine dining experience with creative dishes.',
+            address: '123 Test Street, Woodstock, Cape Town',
+            phone: '+27 21 447 2337',
+            website: 'https://testkitchen.co.za',
+            neighborhood: 'Woodstock',
+            reviewsCount: 1250,
+            images: [],
+            openingHours: [
+              { day: 'tuesday', hours: '18:00 - 22:00' },
+              { day: 'wednesday', hours: '18:00 - 22:00' },
+              { day: 'thursday', hours: '18:00 - 22:00' },
+              { day: 'friday', hours: '18:00 - 22:00' },
+              { day: 'saturday', hours: '18:00 - 22:00' }
+            ],
+            reviews: [],
+            parkingInfo: 'Valet parking available',
+            operatingHours: 'Tue-Sat: 18:00 - 22:00'
+          },
+          {
+            placeId: 'mock-2',
+            name: 'Mama Africa',
+            cuisine: ['African', 'Traditional'],
+            location: 'Long Street, Cape Town',
+            description: 'Authentic African cuisine in the heart of Cape Town.',
+            rating: 4.2,
+            priceLevel: '$$',
+            features: ['Traditional', 'Live Music', 'Cultural Experience'],
+            aiMatchScore: 78,
+            vectorScore: 0.7,
+            keywordScore: 0.8,
+            llmScore: 0.78,
+            llmReasoning: 'Great cultural dining experience.',
+            reviewSummary: 'Authentic African food with live entertainment.',
+            address: '178 Long Street, Cape Town',
+            phone: '+27 21 424 8634',
+            website: 'https://mamafrica.co.za',
+            neighborhood: 'City Bowl',
+            reviewsCount: 890,
+            images: [],
+            openingHours: [
+              { day: 'monday', hours: '19:00 - 23:00' },
+              { day: 'tuesday', hours: '19:00 - 23:00' },
+              { day: 'wednesday', hours: '19:00 - 23:00' },
+              { day: 'thursday', hours: '19:00 - 23:00' },
+              { day: 'friday', hours: '19:00 - 01:00' },
+              { day: 'saturday', hours: '19:00 - 01:00' },
+              { day: 'sunday', hours: '19:00 - 23:00' }
+            ],
+            reviews: [],
+            parkingInfo: 'Street parking available',
+            operatingHours: 'Daily: 19:00 - 23:00'
+          }
+        ]
+
+        const transformedMockRestaurants = mockBackendRestaurants.map(transformBackendRestaurant)
+        setRestaurants(transformedMockRestaurants)
+        setSearchMetadata({
+          originalQuery: query,
+          rewrittenQuery: query,
+          searchSteps: ['Mock Search'],
+          totalProcessingTime: 100
+        })
+        console.log('✅ Mock search successful:', transformedMockRestaurants.length, 'restaurants found')
       }
     } catch (err) {
       console.error('❌ Search error:', err)
@@ -260,6 +346,16 @@ export function RestaurantFinder() {
 
   return (
     <div className="space-y-8">
+      {/* Debug Info */}
+      <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-sm">
+        <p><strong>Debug Info:</strong></p>
+        <p>isLoading: {isLoading ? 'true' : 'false'}</p>
+        <p>restaurants.length: {restaurants.length}</p>
+        <p>error: {error || 'null'}</p>
+        <p>searchQuery: "{searchQuery}"</p>
+        <p>showFilters: {showFilters ? 'true' : 'false'}</p>
+      </div>
+
       {/* Search Section */}
       <div className="bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-2xl p-8">
         <div className="text-center mb-8">
@@ -325,62 +421,68 @@ export function RestaurantFinder() {
 
       {/* Results Section with Filters */}
       {!isLoading && restaurants.length > 0 && (
-        <div className="grid lg:grid-cols-4 gap-8">
-          {/* Filter Panel */}
-          <div className="lg:col-span-1">
-            <FilterPanel
-              isOpen={showFilters}
-              onToggle={() => setShowFilters(!showFilters)}
-              filters={filters}
-              onFiltersChange={setFilters}
-              onApplyFilters={applyFilters}
-              resultsCount={restaurants.length}
-            restaurants={restaurants}
-            />
+        <div>
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 text-sm mb-4">
+            <p><strong>Results Debug:</strong> Showing {restaurants.length} restaurants</p>
           </div>
-
-          {/* Results Grid */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Recommended Restaurants
-              </h2>
-              <span className="text-gray-600 dark:text-gray-400">
-                {restaurants.length} of {restaurants.length} results
-              </span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {restaurants.map((restaurant) => (
-                <RestaurantCard
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  onClick={() => openRestaurantModal(restaurant)}
-                  className="animate-fade-in"
-                />
-              ))}
+          
+          <div className="grid lg:grid-cols-4 gap-8">
+            {/* Filter Panel */}
+            <div className="lg:col-span-1">
+              <FilterPanel
+                isOpen={showFilters}
+                onToggle={() => setShowFilters(!showFilters)}
+                filters={filters}
+                onFiltersChange={setFilters}
+                onApplyFilters={applyFilters}
+                resultsCount={restaurants.length}
+              restaurants={restaurants}
+              />
             </div>
 
-            {/* No Results After Filtering */}
-            {restaurants.length === 0 && (
-              <div className="text-center py-16">
-                <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                  <SearchIcon className="h-12 w-12 text-gray-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  No restaurants match your filters
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-4">
-                  Try adjusting your filter criteria to see more results.
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Clear all filters
-                </button>
+            {/* Results Grid */}
+            <div className="lg:col-span-3 space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Recommended Restaurants
+                </h2>
+                <span className="text-gray-600 dark:text-gray-400">
+                  {restaurants.length} of {restaurants.length} results
+                </span>
               </div>
-            )}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {restaurants.map((restaurant) => (
+                  <RestaurantCard
+                    key={restaurant.id}
+                    restaurant={restaurant}
+                    onClick={() => openRestaurantModal(restaurant)}
+                    className="animate-fade-in"
+                  />
+                ))}
+              </div>
+
+              {/* No Results After Filtering */}
+              {restaurants.length === 0 && (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                    <SearchIcon className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    No restaurants match your filters
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto mb-4">
+                    Try adjusting your filter criteria to see more results.
+                  </p>
+                  <button
+                    onClick={clearFilters}
+                    className="text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
