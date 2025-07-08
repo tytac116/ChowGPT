@@ -9,7 +9,8 @@ const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs))
 }
 
-const formatPrice = (price: string) => {
+const formatPrice = (price: string | undefined | null) => {
+  if (!price) return 'R150-300' // Default price range
   return price.replace(/R/g, 'R ')
 }
 
@@ -161,7 +162,7 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
       <div className="relative h-48 overflow-hidden">
         <img
           src={restaurant.imageUrls?.[0] || ''}
-          alt={restaurant.title}
+          alt={restaurant.title || 'Restaurant'}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
           onError={(e) => {
             // If image fails to load, hide it instead of showing fallback
@@ -219,10 +220,10 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-1">
-              {restaurant.title}
+              {restaurant.title || 'Restaurant'}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 transition-colors duration-200 line-clamp-1">
-              {restaurant.categoryName}
+              {restaurant.categoryName || restaurant.categories?.[0] || 'Restaurant'}
             </p>
           </div>
           <ExternalLink className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1" />
@@ -250,7 +251,7 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
           </div>
           <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 flex-shrink-0">
             <DollarSign className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
-            <span className="text-sm font-medium">{formatPrice(restaurant.price) || 'R150-300'}</span>
+            <span className="text-sm font-medium">{formatPrice(restaurant.price)}</span>
           </div>
         </div>
 
