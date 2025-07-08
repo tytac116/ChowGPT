@@ -116,33 +116,55 @@ function transformReviews(reviews: any[]): any[] {
   }))
 }
 
-function transformBackendRestaurant(backendRestaurant: any): any {
+function transformBackendRestaurant(backendRestaurant: any): Restaurant {
   return {
-    id: backendRestaurant.placeId,
-    name: backendRestaurant.name || backendRestaurant.title || 'Restaurant',
-    cuisine: backendRestaurant.cuisine || backendRestaurant.categories || ['Restaurant'],
-    location: extractLocationString(backendRestaurant.location),
-    description: backendRestaurant.description || backendRestaurant.reviewSummary || 'Great dining experience in Cape Town.',
-    rating: backendRestaurant.rating || backendRestaurant.totalScore || 4.0,
-    priceRange: convertPriceToRands(backendRestaurant.priceLevel || backendRestaurant.price || backendRestaurant.averagePrice),
-    features: backendRestaurant.features || [],
-    matchScore: generateContextualMatchScore(backendRestaurant.placeId),
-    aiExplanation: backendRestaurant.llmReasoning || 'This restaurant matches your preferences based on our analysis.',
+    // Basic info
+    id: backendRestaurant.placeId || `restaurant-${Date.now()}`,
+    title: backendRestaurant.name || backendRestaurant.title || 'Restaurant',
+    categoryName: backendRestaurant.cuisine?.[0] || backendRestaurant.categories?.[0] || 'Restaurant',
+    categories: backendRestaurant.cuisine || backendRestaurant.categories || ['Restaurant'],
+    
+    // Ratings and reviews
+    totalScore: backendRestaurant.rating || backendRestaurant.totalScore || 4.0,
+    reviewsCount: backendRestaurant.reviewsCount || 0,
+    
+    // Location and price
     address: backendRestaurant.address || backendRestaurant.location || 'Cape Town',
+    neighborhood: backendRestaurant.neighborhood || extractLocationString(backendRestaurant.location),
+    price: convertPriceToRands(backendRestaurant.priceLevel || backendRestaurant.price || backendRestaurant.averagePrice),
+    
+    // Images
+    imagesCount: backendRestaurant.imageUrls?.length || 0,
+    imageUrls: backendRestaurant.imageUrls || backendRestaurant.images || [],
+    
+    // Features and tags
+    reviewsTags: backendRestaurant.features || backendRestaurant.highlights || [],
+    serviceOptions: backendRestaurant.serviceOptions || [],
+    highlights: backendRestaurant.highlights || [],
+    offerings: backendRestaurant.offerings || [],
+    accessibility: backendRestaurant.accessibility || [],
+    
+    // Contact info
     phone: backendRestaurant.phone || '',
     website: backendRestaurant.website || '',
-    neighborhood: backendRestaurant.neighborhood || 'Cape Town',
-    reviewCount: backendRestaurant.reviewsCount || 0,
-    images: backendRestaurant.imageUrls || backendRestaurant.images || getDefaultImages(),
-    hours: transformOpeningHours(backendRestaurant.openingHours),
+    
+    // Hours
+    openingHours: transformOpeningHours(backendRestaurant.openingHours),
+    popularTimes: backendRestaurant.popularTimes || [],
+    
+    // Reviews
     reviews: transformReviews(backendRestaurant.reviews || []),
-    parkingInfo: backendRestaurant.parkingInfo || 'Street parking available',
-    dietaryOptions: backendRestaurant.features?.filter((f: string) => 
-      f.toLowerCase().includes('vegan') || 
-      f.toLowerCase().includes('vegetarian') || 
-      f.toLowerCase().includes('gluten')
-    ) || [],
-    operatingHours: backendRestaurant.operatingHours || 'Daily: 09:00 - 22:00',
+    
+    // Additional info
+    additionalInfo: {
+      description: backendRestaurant.description || backendRestaurant.reviewSummary || 'Great dining experience in Cape Town.',
+      parkingInfo: backendRestaurant.parkingInfo || 'Street parking available',
+      aiMatchScore: backendRestaurant.aiMatchScore || generateContextualMatchScore(backendRestaurant.placeId),
+      vectorScore: backendRestaurant.vectorScore || 0,
+      keywordScore: backendRestaurant.keywordScore || 0,
+      llmScore: backendRestaurant.llmScore || 0,
+      llmReasoning: backendRestaurant.llmReasoning || 'This restaurant matches your preferences based on our analysis.',
+    }
   }
 }
 
@@ -195,7 +217,9 @@ export function RestaurantFinder() {
       const response = await authApiService.searchRestaurants(searchRequest)
       
       if (response.success && response.data) {
+        console.log('Backend response:', response.data.restaurants[0]) // Debug first restaurant
         const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
+        console.log('Transformed restaurant:', transformedRestaurants[0]) // Debug transformed data
         setRestaurants(transformedRestaurants)
         setSearchMetadata(response.data.searchMetadata)
       } else {

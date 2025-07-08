@@ -145,8 +145,8 @@ interface RestaurantCardProps {
 export function RestaurantCard({ restaurant, onClick, className }: RestaurantCardProps) {
   const { searchQuery } = useAppState()
   
-  // Use real AI match score if available, otherwise fall back to contextual scoring
-  const matchScore = restaurant.aiMatchScore || generateContextualMatchScore(restaurant.id, searchQuery)
+  // Use real AI match score from additionalInfo if available, otherwise fall back to contextual scoring
+  const matchScore = restaurant.additionalInfo?.aiMatchScore || restaurant.aiMatchScore || generateContextualMatchScore(restaurant.id, searchQuery)
   const matchColors = getMatchScoreColor(matchScore)
   const matchLabel = getMatchScoreLabel(matchScore)
 
@@ -207,7 +207,7 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
         </div>
         
         {/* AI-Powered Badge for restaurants with LLM scores */}
-        {restaurant.llmScore && (
+        {(restaurant.additionalInfo?.llmScore || restaurant.llmScore) && (
           <div className="absolute bottom-3 left-3 bg-primary-500 text-white px-2 py-1 rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-all duration-300">
             🤖 AI Analyzed
           </div>
@@ -283,20 +283,20 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
         </div>
 
         {/* AI Score Breakdown - Only show on hover if real scores are available */}
-        {(restaurant.vectorScore || restaurant.keywordScore || restaurant.llmScore) && (
+        {(restaurant.additionalInfo?.vectorScore || restaurant.additionalInfo?.keywordScore || restaurant.additionalInfo?.llmScore || restaurant.vectorScore || restaurant.keywordScore || restaurant.llmScore) && (
           <div className="mt-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
             <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
               <div className="flex justify-between">
                 <span>Vector:</span>
-                <span>{Math.round(restaurant.vectorScore || 0)}%</span>
+                <span>{Math.round(restaurant.additionalInfo?.vectorScore || restaurant.vectorScore || 0)}%</span>
               </div>
               <div className="flex justify-between">
                 <span>Keyword:</span>
-                <span>{Math.round(restaurant.keywordScore || 0)}%</span>
+                <span>{Math.round(restaurant.additionalInfo?.keywordScore || restaurant.keywordScore || 0)}%</span>
               </div>
               <div className="flex justify-between">
                 <span>AI:</span>
-                <span>{Math.round(restaurant.llmScore || 0)}%</span>
+                <span>{Math.round(restaurant.additionalInfo?.llmScore || restaurant.llmScore || 0)}%</span>
               </div>
             </div>
           </div>
