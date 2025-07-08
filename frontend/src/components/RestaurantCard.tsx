@@ -145,10 +145,34 @@ interface RestaurantCardProps {
 export function RestaurantCard({ restaurant, onClick, className }: RestaurantCardProps) {
   const { searchQuery } = useAppState()
   
+  // Debug image URLs
+  console.log('Restaurant image URLs:', restaurant.imageUrls, 'for restaurant:', restaurant.title)
+  
   // Use real AI match score from additionalInfo if available, otherwise fall back to contextual scoring
   const matchScore = restaurant.additionalInfo?.aiMatchScore || restaurant.aiMatchScore || generateContextualMatchScore(restaurant.id, searchQuery)
   const matchColors = getMatchScoreColor(matchScore)
   const matchLabel = getMatchScoreLabel(matchScore)
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log('Image failed to load:', restaurant.imageUrls?.[0], 'for restaurant:', restaurant.title)
+    console.log('Error event:', e)
+    // Replace with error image placeholder
+    const target = e.target as HTMLImageElement
+    target.style.display = 'none'
+    
+    // Show error message in the image container
+    const container = target.parentElement
+    if (container) {
+      container.innerHTML = `
+        <div class="w-full h-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+          <div class="text-red-400 text-center">
+            <div class="text-2xl mb-2">❌</div>
+            <div class="text-xs">Image Failed to Load</div>
+          </div>
+        </div>
+      `
+    }
+  }
 
   return (
     <div
@@ -160,30 +184,26 @@ export function RestaurantCard({ restaurant, onClick, className }: RestaurantCar
     >
       {/* Image */}
       <div className="relative h-48 overflow-hidden">
-        <img
-          src={restaurant.imageUrls?.[0] || ''}
-          alt={restaurant.title || 'Restaurant'}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
-          onError={(e) => {
-            // If image fails to load, hide it instead of showing fallback
-            const target = e.target as HTMLImageElement
-            target.style.display = 'none'
-          }}
-        />
-        
-        {/* Only show overlay if we have a valid image */}
-        {restaurant.imageUrls?.[0] && (
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent group-hover:from-black/40 transition-all duration-300" />
-        )}
-        
-        {/* If no image, show placeholder */}
-        {!restaurant.imageUrls?.[0] && (
+        {restaurant.imageUrls?.[0] ? (
+          <img
+            src={restaurant.imageUrls[0]}
+            alt={restaurant.title || 'Restaurant'}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out"
+            onError={handleImageError}
+            loading="lazy"
+          />
+        ) : (
           <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
             <div className="text-gray-400 text-center">
               <div className="text-2xl mb-2">🍽️</div>
               <div className="text-sm">No Image Available</div>
             </div>
           </div>
+        )}
+        
+        {/* Only show overlay if we have a valid image URL */}
+        {restaurant.imageUrls?.[0] && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent group-hover:from-black/40 transition-all duration-300" />
         )}
         
         {/* AI Match Score Badge - Enhanced with Real Data */}
