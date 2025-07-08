@@ -59,15 +59,15 @@ router.post('/restaurants', devBypassAuth, async (req, res, next) => {
   }
 });
 
-// Search suggestions endpoint - Protected with authentication
-router.get('/suggestions', devBypassAuth, async (req, res, next) => {
+// Search suggestions endpoint - No authentication required (static data)
+router.get('/suggestions', async (req, res, next) => {
   try {
     const query = req.query.q as string;
     if (!query || query.length < 2) {
       return res.json({ suggestions: [] });
     }
     
-    console.log('🔍 Suggestions request:', { query, userId: req.auth?.userId });
+    console.log('🔍 Suggestions request:', { query });
     
     const suggestions = await searchService.getSearchSuggestions(query);
     res.json({ suggestions });
