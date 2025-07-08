@@ -158,14 +158,6 @@ export function RestaurantFinder() {
   // Use authenticated API service
   const authApiService = useAuthApiService()
 
-  // Debug current state on every render
-  console.log('RestaurantFinder state:', { 
-    isLoading, 
-    restaurantsLength: restaurants.length, 
-    error, 
-    searchQuery 
-  })
-
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
       setRestaurants([])
@@ -202,19 +194,11 @@ export function RestaurantFinder() {
 
       const response = await authApiService.searchRestaurants(searchRequest)
       
-      console.log('Raw API response:', response)
-      console.log('Response.success:', response.success)
-      console.log('Response.data:', response.data)
-      
       if (response.success && response.data) {
-        console.log('Raw restaurants from API:', response.data.restaurants)
         const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
-        console.log('Transformed restaurants:', transformedRestaurants)
         setRestaurants(transformedRestaurants)
         setSearchMetadata(response.data.searchMetadata)
-        console.log('Restaurants set in state, length:', transformedRestaurants.length)
       } else {
-        console.log('API response failed or no data:', { success: response.success, hasData: !!response.data })
         throw new Error('Search failed')
       }
     } catch (err) {
@@ -270,15 +254,6 @@ export function RestaurantFinder() {
   const shouldShowResults = !isLoading && restaurants.length > 0
   const shouldShowNoResults = !isLoading && restaurants.length === 0 && !error && searchQuery
   
-  console.log('Rendering conditions:', {
-    shouldShowResults,
-    shouldShowNoResults,
-    isLoading,
-    restaurantsCount: restaurants.length,
-    hasError: !!error,
-    searchQuery
-  })
-
   return (
     <div className="space-y-8">
       {/* Search Section */}
