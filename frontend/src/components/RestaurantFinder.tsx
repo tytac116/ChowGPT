@@ -9,6 +9,7 @@ import { useAppState } from '../contexts/AppStateContext'
 import { useAuthApiService } from '../lib/authApiService'
 import { Restaurant } from '../types/restaurant'
 import { defaultFilterState } from '../types/filters'
+import { useAuth } from '@clerk/clerk-react'
 
 // Direct utility implementation to avoid import issues
 const predefinedMatchScores: Record<string, number> = {
@@ -158,6 +159,10 @@ export function RestaurantFinder() {
   // Use authenticated API service
   const authApiService = useAuthApiService()
 
+  // Debug: Check authentication status
+  const { isSignedIn, user } = useAuth()
+  console.log('🔐 Authentication status:', { isSignedIn, userId: user?.id })
+
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
       setRestaurants([])
@@ -192,18 +197,36 @@ export function RestaurantFinder() {
         limit: 20
       }
 
+      console.log('🔍 Making search request:', searchRequest)
       const response = await authApiService.searchRestaurants(searchRequest)
+      console.log('📄 Search response:', response)
       
       if (response.success && response.data) {
         const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
         setRestaurants(transformedRestaurants)
         setSearchMetadata(response.data.searchMetadata)
+        console.log('✅ Search successful:', transformedRestaurants.length, 'restaurants found')
       } else {
         throw new Error('Search failed')
       }
     } catch (err) {
-      console.error('Search error:', err)
-      setError(err instanceof Error ? err.message : 'Search failed. Please try again.')
+      console.error('❌ Search error:', err)
+      
+      // Better error handling for authentication issues
+      if (err instanceof Error) {
+        if (err.message.includes('Authentication') || err.message.includes('401')) {
+          setError('Authentication failed. Please try signing out and signing back in.')
+        } else if (err.message.includes('403')) {
+          setError('Access forbidden. Please check your account permissions.')
+        } else if (err.message.includes('500')) {
+          setError('Server error. Please try again later.')
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError('Search failed. Please try again.')
+      }
+      
       setRestaurants([])
     } finally {
       setIsLoading(false)
