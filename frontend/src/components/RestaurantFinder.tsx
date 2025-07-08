@@ -217,9 +217,7 @@ export function RestaurantFinder() {
       const response = await authApiService.searchRestaurants(searchRequest)
       
       if (response.success && response.data) {
-        console.log('Backend response:', response.data.restaurants[0]) // Debug first restaurant
         const transformedRestaurants = response.data.restaurants.map(transformBackendRestaurant)
-        console.log('Transformed restaurant:', transformedRestaurants[0]) // Debug transformed data
         setRestaurants(transformedRestaurants)
         setSearchMetadata(response.data.searchMetadata)
       } else {

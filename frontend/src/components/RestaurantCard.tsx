@@ -145,17 +145,12 @@ interface RestaurantCardProps {
 export function RestaurantCard({ restaurant, onClick, className }: RestaurantCardProps) {
   const { searchQuery } = useAppState()
   
-  // Debug image URLs
-  console.log('Restaurant image URLs:', restaurant.imageUrls, 'for restaurant:', restaurant.title)
-  
   // Use real AI match score from additionalInfo if available, otherwise fall back to contextual scoring
   const matchScore = restaurant.additionalInfo?.aiMatchScore || restaurant.aiMatchScore || generateContextualMatchScore(restaurant.id, searchQuery)
   const matchColors = getMatchScoreColor(matchScore)
   const matchLabel = getMatchScoreLabel(matchScore)
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log('Image failed to load:', restaurant.imageUrls?.[0], 'for restaurant:', restaurant.title)
-    console.log('Error event:', e)
     // Replace with error image placeholder
     const target = e.target as HTMLImageElement
     target.style.display = 'none'
