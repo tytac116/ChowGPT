@@ -53,23 +53,23 @@ export const enhancedRestaurantSearchSchema = z.object({
 });
 
 // Validation helper functions
-export const validateSearchQuery = (data: any): SearchQuery => {
-  return searchQuerySchema.parse(data);
+export const validateSearchQuery = (data: unknown): SearchQuery => {
+  return searchQuerySchema.parse(data) as SearchQuery;
 };
 
-export const validateVectorSearchQuery = (data: any): VectorSearchQuery => {
-  return vectorSearchQuerySchema.parse(data);
+export const validateVectorSearchQuery = (data: unknown): VectorSearchQuery => {
+  return vectorSearchQuerySchema.parse(data) as VectorSearchQuery;
 };
 
-export const validateSearchFilters = (data: any): SearchFilters => {
-  return searchFiltersSchema.parse(data);
+export const validateSearchFilters = (data: unknown): SearchFilters => {
+  return searchFiltersSchema.parse(data) as SearchFilters;
 };
 
 export const validateRestaurantId = (id: string): string => {
   return restaurantIdSchema.parse(id);
 };
 
-export const validatePagination = (data: any) => {
+export const validatePagination = (data: unknown) => {
   return paginationSchema.parse(data);
 };
 
