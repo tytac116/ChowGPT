@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npx tsc && echo 'Build completed successfully'",
+    "build": "npx tsc",
     "start": "node dist/index.js",
     "test": "jest",
     "vercel-build": "npm run build"

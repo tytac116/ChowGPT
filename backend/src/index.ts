@@ -226,4 +226,7 @@ process.on('SIGINT', () => {
 // Start the server
 startServer();
 
-export default app; 
+export default app;
+
+// Optional: Add a handler for Vercel serverless function
+export const handler = app; 
