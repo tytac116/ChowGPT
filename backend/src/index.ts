@@ -38,6 +38,8 @@ const corsOptions = {
       'https://chowgpt-frontend.vercel.app',
       'https://chowgpt.co.za',  // Custom domain without www
       'https://www.chowgpt.co.za',  // Custom domain with www
+      // Dynamically add your specific Vercel deployment URL
+      `https://${process.env.VERCEL_URL || 'your-vercel-deployment-url'}`,
       // Add the environment variable if it exists
       ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
     ];
