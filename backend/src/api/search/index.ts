@@ -20,8 +20,8 @@ const SearchRequestSchema = z.object({
     rating: z.number().min(0).max(5).optional(),
     features: z.array(z.string()).optional(),
   }).optional(),
-  limit: z.number().min(1).max(50).default(9),
-});
+  limit: z.number().min(1).max(50).optional().default(9),
+}).strict();
 
 // Main search endpoint - Protected with authentication
 router.post('/restaurants', devBypassAuth, async (req, res, next) => {
@@ -37,7 +37,11 @@ router.post('/restaurants', devBypassAuth, async (req, res, next) => {
     
     // Execute search pipeline
     const startTime = Date.now();
-    const searchResults = await searchService.searchRestaurants(validatedData);
+    const searchResults = await searchService.searchRestaurants({
+      query: validatedData.query,
+      filters: validatedData.filters,
+      limit: validatedData.limit,
+    });
     const searchTime = Date.now() - startTime;
     
     console.log(`✅ Search completed in ${searchTime}ms, found ${searchResults.restaurants.length} restaurants`);
