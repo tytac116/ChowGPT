@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { SERVER_CONFIG, isDevelopment } from './config';
 import { errorHandler, notFoundHandler } from './utils/errorHandler';
 import { supabaseService } from './services/supabaseClient';
+import { Request, Response, NextFunction } from 'express';
 
 // Import API routes
 import restaurantsRouter from './api/restaurants/index';
@@ -12,6 +13,15 @@ import searchRouter from './api/search';
 import chatRouter from './api/chat/router';
 
 const app = express();
+
+// Add this middleware before other middleware and routes
+app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(`🌐 Incoming Request: ${req.method} ${req.path}`);
+  console.log('📋 Request Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('🔍 Request Query:', JSON.stringify(req.query, null, 2));
+  console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
+  next();
+});
 
 // Security middleware
 app.use(helmet());
