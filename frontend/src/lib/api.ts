@@ -10,8 +10,8 @@ const getApiBaseUrl = () => {
     return 'http://localhost:3001/api'
   }
   
-  // Production: always use Render backend
-  return 'https://chowgpt.onrender.com/api'
+  // Production: use new Vercel backend
+  return 'https://chowgpt-backend-new.vercel.app/api'
 }
 
 const API_BASE_URL = getApiBaseUrl()
