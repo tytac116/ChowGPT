@@ -226,7 +226,4 @@ process.on('SIGINT', () => {
 // Start the server
 startServer();
 
-export const handler = (req: express.Request, res: express.Response) => {
-  // Delegate to the Express app
-  app(req, res);
-}; 
+export default app; 
